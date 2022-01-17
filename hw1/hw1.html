@@ -186,7 +186,19 @@ pre code {
 </div>
 <div id="q2.-data-ethics-training" class="section level2">
 <h2>Q2. Data ethics training</h2>
-<p>This exercise (and later in this course) uses the <a href="https://mimic-iv.mit.edu">MIMIC-IV data</a>, a freely accessible critical care database developed by the MIT Lab for Computational Physiology. Follow the instructions at <a href="https://mimic.mit.edu/docs/gettingstarted/" class="uri">https://mimic.mit.edu/docs/gettingstarted/</a> to (1) complete the CITI <code>Data or Specimens Only Research</code> course and (2) obtain the PhysioNet credential for using the MIMIC-IV data. Display the verification links to your completion report and completion certificate here. (Hint: The CITI training takes a couple hours and the PhysioNet credentialing takes a couple days; do not leave it to the last minute.)</p>
+<p>This exercise (and later in this course) uses the <a href="https://mimic-iv.mit.edu">MIMIC-IV data</a>, a freely accessible critical care database developed by the MIT Lab for Computational Physiology. Follow the instructions at <a href="https://mimic.mit.edu/docs/gettingstarted/" class="uri">https://mimic.mit.edu/docs/gettingstarted/</a> to</p>
+<ol style="list-style-type: decimal">
+<li>complete the CITI <code>Data or Specimens Only Research</code> course.</li>
+</ol>
+<div id="answers" class="section level3">
+<h3>Answers</h3>
+<p><strong>Completion report link</strong>: <a href="https://www.citiprogram.org/verify/?k703f8137-96c1-484d-bc50-f8ff9ab1d214-46671395" class="uri">https://www.citiprogram.org/verify/?k703f8137-96c1-484d-bc50-f8ff9ab1d214-46671395</a></p>
+<p><strong>Completion certificate link</strong>: <a href="https://www.citiprogram.org/verify/?w3555116b-f653-4ad0-a71d-cdac98ee9677-46671395" class="uri">https://www.citiprogram.org/verify/?w3555116b-f653-4ad0-a71d-cdac98ee9677-46671395</a></p>
+<ol start="2" style="list-style-type: decimal">
+<li>obtain the PhysioNet credential for using the MIMIC-IV data. Display the verification links to your completion report and completion certificate here. (Hint: The CITI training takes a couple hours and the PhysioNet credentialing takes a couple days; do not leave it to the last minute.)</li>
+</ol>
+<p><strong>Still being processed.</strong></p>
+</div>
 </div>
 <div id="q3.-linux-shell-commands" class="section level2">
 <h2>Q3. Linux Shell Commands</h2>
@@ -200,19 +212,131 @@ pre code {
 ## -rw-r--r--. 1 root root  797 Jan  4 21:48 index.html
 ## -rw-r--r--. 1 root root 2518 Jan  4 21:54 LICENSE.txt
 ## -rw-r--r--. 1 root root 2459 Jan  4 21:48 SHA256SUMS.txt</code></pre>
-<p>Please, do <strong>not</strong> put these data files into Git; they are big. Do <strong>not</strong> copy them into your directory. Do <strong>not</strong> decompress the gz data files. These create unnecessary big files on storage and are not big data friendly practices. Just read from the data folder <code>/mnt/mimiciv/1.0</code> directly in following exercises.</p>
-<p>Use Bash commands to answer following questions.</p></li>
-<li><p>Display the contents in the folders <code>core</code>, <code>hosp</code>, <code>icu</code>. Why are these data files distributed as <code>.csv.gz</code> files instead of <code>.csv</code> (comma separated values) files? Read the page <a href="https://mimic.mit.edu/docs/iv/" class="uri">https://mimic.mit.edu/docs/iv/</a> to understand what’s in each folder.</p></li>
-<li><p>Briefly describe what bash commands <code>zcat</code>, <code>zless</code>, <code>zmore</code>, and <code>zgrep</code> do.</p></li>
+<p>Please, do <strong>not</strong> put these data files into Git; they are big. Do <strong>not</strong> copy them into your directory. Do <strong>not</strong> decompress the gz data files. These create unnecessary big files on storage and are not big data friendly practices. Just read from the data folder <code>/mnt/mimiciv/1.0</code> directly in following exercises.</p></li>
+</ol>
+<div id="answers-1" class="section level3">
+<h3>Answers</h3>
+<pre class="bash"><code>ls -al -1 /mnt/mimiciv/1.0/</code></pre>
+<pre><code>## total 32
+## drwxr-xr-x. 5 root root 4096 Jan  4 21:54 .
+## drwxr-xr-x. 4 root root 4096 Jan  4 21:48 ..
+## drwxr-xr-x. 2 root root 4096 Jan  4 21:48 core
+## drwxr-xr-x. 2 root root 4096 Jan  4 21:51 hosp
+## drwxr-xr-x. 2 root root 4096 Jan  4 21:52 icu
+## -rw-r--r--. 1 root root  797 Jan  4 21:48 index.html
+## -rw-r--r--. 1 root root 2518 Jan  4 21:54 LICENSE.txt
+## -rw-r--r--. 1 root root 2459 Jan  4 21:48 SHA256SUMS.txt</code></pre>
+<pre><code>Use Bash commands to answer following questions.</code></pre>
+<ol start="2" style="list-style-type: decimal">
+<li>Display the contents in the folders <code>core</code>, <code>hosp</code>, <code>icu</code>. Why are these data files distributed as <code>.csv.gz</code> files instead of <code>.csv</code> (comma separated values) files? Read the page <a href="https://mimic.mit.edu/docs/iv/" class="uri">https://mimic.mit.edu/docs/iv/</a> to understand what’s in each folder.</li>
+</ol>
+</div>
+<div id="answers-2" class="section level3">
+<h3>Answers</h3>
+<pre class="bash"><code>ls -al -1 /mnt/mimiciv/1.0/core</code></pre>
+<pre><code>## total 71480
+## drwxr-xr-x. 2 root root     4096 Jan  4 21:48 .
+## drwxr-xr-x. 5 root root     4096 Jan  4 21:54 ..
+## -rw-r--r--. 1 root root 17208966 Jan  4 21:48 admissions.csv.gz
+## -rw-r--r--. 1 root root      606 Jan  4 21:48 index.html
+## -rw-r--r--. 1 root root  2955582 Jan  4 21:48 patients.csv.gz
+## -rw-r--r--. 1 root root 53014503 Jan  4 21:48 transfers.csv.gz</code></pre>
+<pre class="bash"><code>ls -al -1 /mnt/mimiciv/1.0/hosp</code></pre>
+<pre><code>## total 4454020
+## drwxr-xr-x. 2 root root       4096 Jan  4 21:51 .
+## drwxr-xr-x. 5 root root       4096 Jan  4 21:54 ..
+## -rw-r--r--. 1 root root     430049 Jan  4 21:51 d_hcpcs.csv.gz
+## -rw-r--r--. 1 root root   29531152 Jan  4 21:48 diagnoses_icd.csv.gz
+## -rw-r--r--. 1 root root     863239 Jan  4 21:48 d_icd_diagnoses.csv.gz
+## -rw-r--r--. 1 root root     579998 Jan  4 21:48 d_icd_procedures.csv.gz
+## -rw-r--r--. 1 root root      14898 Jan  4 21:48 d_labitems.csv.gz
+## -rw-r--r--. 1 root root   11684062 Jan  4 21:51 drgcodes.csv.gz
+## -rw-r--r--. 1 root root  515763427 Jan  4 21:51 emar.csv.gz
+## -rw-r--r--. 1 root root  476252563 Jan  4 21:48 emar_detail.csv.gz
+## -rw-r--r--. 1 root root    2098831 Jan  4 21:51 hcpcsevents.csv.gz
+## -rw-r--r--. 1 root root       2325 Jan  4 21:48 index.html
+## -rw-r--r--. 1 root root 2091865786 Jan  4 21:50 labevents.csv.gz
+## -rw-r--r--. 1 root root   99133381 Jan  4 21:48 microbiologyevents.csv.gz
+## -rw-r--r--. 1 root root  422874088 Jan  4 21:48 pharmacy.csv.gz
+## -rw-r--r--. 1 root root  501381155 Jan  4 21:51 poe.csv.gz
+## -rw-r--r--. 1 root root   24020923 Jan  4 21:48 poe_detail.csv.gz
+## -rw-r--r--. 1 root root  367041717 Jan  4 21:49 prescriptions.csv.gz
+## -rw-r--r--. 1 root root    7750325 Jan  4 21:48 procedures_icd.csv.gz
+## -rw-r--r--. 1 root root    9565293 Jan  4 21:48 services.csv.gz</code></pre>
+<pre class="bash"><code>ls -al -1 /mnt/mimiciv/1.0/icu</code></pre>
+<pre><code>## total 2741340
+## drwxr-xr-x. 2 root root       4096 Jan  4 21:52 .
+## drwxr-xr-x. 5 root root       4096 Jan  4 21:54 ..
+## -rw-r--r--. 1 root root 2350783547 Jan  4 21:54 chartevents.csv.gz
+## -rw-r--r--. 1 root root   43296273 Jan  4 21:52 datetimeevents.csv.gz
+## -rw-r--r--. 1 root root      55917 Jan  4 21:52 d_items.csv.gz
+## -rw-r--r--. 1 root root    2848628 Jan  4 21:52 icustays.csv.gz
+## -rw-r--r--. 1 root root       1103 Jan  4 21:52 index.html
+## -rw-r--r--. 1 root root  352443512 Jan  4 21:52 inputevents.csv.gz
+## -rw-r--r--. 1 root root   37095672 Jan  4 21:52 outputevents.csv.gz
+## -rw-r--r--. 1 root root   20567368 Jan  4 21:52 procedureevents.csv.gz</code></pre>
+<p><strong>Reason for <code>.csv.gz</code> file type: Firstly, those data are really large, so they have been compressed with gzip utility. Secondly, those data are not publicly available and the structure is subject to change, so the author compressed them. </strong></p>
+<ol start="3" style="list-style-type: decimal">
+<li>Briefly describe what bash commands <code>zcat</code>, <code>zless</code>, <code>zmore</code>, and <code>zgrep</code> do.</li>
+</ol>
+</div>
+<div id="answer" class="section level3">
+<h3>Answer</h3>
+<p><strong><code>zcat</code> command will recall the <code>Gzip</code>, which will reduce the size of the named files using Lempel-Ziv coding (LZ77). Whenever possible, each file is replaced by one with the extension <code>.gz</code>, while keeping the same ownership modes , access and modification times. Briefly, this command can be regarded as command <code>cat</code> specified for compressed files.</strong></p>
+<p><strong><code>zless</code> is a filter which allows examination of compressed or plain text files one screenful at a time on a soft-copy terminal. Briefly, it can be regarded as command <code>less</code> specified for compressed files.</strong></p>
+<p><strong><code>zmore</code> is a filter which allows examination of compressed or plain text files one screenful at a time on a soft-copy terminal. Briefly, it can be regarded as command <code>more</code> specified for compressed files.</strong></p>
+<p><strong><code>zgrep</code> invokes <code>grep</code> on compressed or gzipped files.</strong></p>
+<ol start="4" style="list-style-type: decimal">
 <li><p>What’s the output of following bash script?</p>
 <pre class="bash"><code>for datafile in /mnt/mimiciv/1.0/core/*.gz
   do
     ls -l $datafile
-  done</code></pre>
-<p>Display the number of lines in each data file using a similar loop.</p></li>
-<li><p>Display the first few lines of <code>admissions.csv.gz</code>. How many rows are in this data file? How many unique patients (identified by <code>subject_id</code>) are in this data file? (Hint: combine Linux commands <code>zcat</code>, <code>head</code>/<code>tail</code>, <code>awk</code>, <code>sort</code>, <code>uniq</code>, <code>wc</code>, and so on.)</p></li>
-<li><p>What are the possible values taken by each of the variable <code>admission_type</code>, <code>admission_location</code>, <code>insurance</code>, and <code>ethnicity</code>? Also report the count for each unique value of these variables. (Hint: combine Linux commands <code>zcat</code>, <code>head</code>/<code>tail</code>, <code>awk</code>, <code>uniq -c</code>, <code>wc</code>, and so on.)</p></li>
+  done</code></pre></li>
 </ol>
+</div>
+<div id="answer-1" class="section level3">
+<h3>Answer</h3>
+<p><strong>The output is</strong></p>
+<pre class="bash"><code>for datafile in /mnt/mimiciv/1.0/core/*.gz
+      do
+        ls -l $datafile
+      done</code></pre>
+<pre><code>## -rw-r--r--. 1 root root 17208966 Jan  4 21:48 /mnt/mimiciv/1.0/core/admissions.csv.gz
+## -rw-r--r--. 1 root root 2955582 Jan  4 21:48 /mnt/mimiciv/1.0/core/patients.csv.gz
+## -rw-r--r--. 1 root root 53014503 Jan  4 21:48 /mnt/mimiciv/1.0/core/transfers.csv.gz</code></pre>
+<p>Display the number of lines in each data file using a similar loop.</p>
+<pre class="bash"><code>for datafile in /mnt/mimiciv/1.0/core/*.gz
+      do
+        gzip -cd $datafile | wc -l
+      done</code></pre>
+<pre><code>## 523741
+## 382279
+## 2189536</code></pre>
+<ol start="5" style="list-style-type: decimal">
+<li>Display the first few lines of <code>admissions.csv.gz</code>. How many rows are in this data file? How many unique patients (identified by <code>subject_id</code>) are in this data file? (Hint: combine Linux commands <code>zcat</code>, <code>head</code>/<code>tail</code>, <code>awk</code>, <code>sort</code>, <code>uniq</code>, <code>wc</code>, and so on.)</li>
+</ol>
+</div>
+<div id="answer-2" class="section level3">
+<h3>Answer</h3>
+<pre class="bash"><code>gzip -cd /mnt/mimiciv/1.0/core/admissions.csv.gz | head -10
+gzip -cd /mnt/mimiciv/1.0/core/admissions.csv.gz | wc -l</code></pre>
+<pre><code>## subject_id,hadm_id,admittime,dischtime,deathtime,admission_type,admission_location,discharge_location,insurance,language,marital_status,ethnicity,edregtime,edouttime,hospital_expire_flag
+## 14679932,21038362,2139-09-26 14:16:00,2139-09-28 11:30:00,,ELECTIVE,,HOME,Other,ENGLISH,SINGLE,UNKNOWN,,,0
+## 15585972,24941086,2123-10-07 23:56:00,2123-10-12 11:22:00,,ELECTIVE,,HOME,Other,ENGLISH,,WHITE,,,0
+## 11989120,21965160,2147-01-14 09:00:00,2147-01-17 14:25:00,,ELECTIVE,,HOME,Other,ENGLISH,,UNKNOWN,,,0
+## 17817079,24709883,2165-12-27 17:33:00,2165-12-31 21:18:00,,ELECTIVE,,HOME,Other,ENGLISH,,OTHER,,,0
+## 15078341,23272159,2122-08-28 08:48:00,2122-08-30 12:32:00,,ELECTIVE,,HOME,Other,ENGLISH,,BLACK/AFRICAN AMERICAN,,,0
+## 19124609,20517215,2169-03-14 12:44:00,2169-03-20 19:15:00,,ELECTIVE,,HOME,Other,ENGLISH,,UNKNOWN,,,0
+## 17301855,29732723,2140-06-06 14:23:00,2140-06-08 14:25:00,,ELECTIVE,,HOME,Other,ENGLISH,,WHITE,,,0
+## 17991012,24298836,2181-07-10 20:28:00,2181-07-12 15:49:00,,ELECTIVE,,HOME,Other,ENGLISH,,WHITE,,,0
+## 16865435,23216961,2185-07-19 02:12:00,2185-07-21 11:50:00,,ELECTIVE,,HOME,Other,ENGLISH,,WHITE,,,0
+## 523741</code></pre>
+<pre class="bash"><code>gzip -cd /mnt/mimiciv/1.0/core/admissions.csv.gz | awk -F: &#39;{FS=&quot;,&quot;} {print $1}&#39;  | sort -u | wc -l</code></pre>
+<pre><code>## 256879</code></pre>
+<ol start="6" style="list-style-type: decimal">
+<li>What are the possible values taken by each of the variable <code>admission_type</code>, <code>admission_location</code>, <code>insurance</code>, and <code>ethnicity</code>? Also report the count for each unique value of these variables. (Hint: combine Linux commands <code>zcat</code>, <code>head</code>/<code>tail</code>, <code>awk</code>, <code>uniq -c</code>, <code>wc</code>, and so on.)</li>
+</ol>
+</div>
 </div>
 <div id="q4.-whos-popular-in-price-and-prejudice" class="section level2">
 <h2>Q4. Who’s popular in Price and Prejudice</h2>
