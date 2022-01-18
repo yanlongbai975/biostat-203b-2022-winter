@@ -350,6 +350,9 @@ omitted) for the current user."
 id
 ```
 
+**The following code will lead to an unstoppable process for the server, so I 
+set it's `eval` value to be FALSE.**
+
 ```{bash eval=FALSE}
 echo "`Last`  searches  back through the file /var/log/wtmp (or the file 
 designated by the -f flag) and displays a list of all users logged in (and 
@@ -357,6 +360,7 @@ out) since that file was created. And `head` is to display the first ten
 records."
 last | head -n 10
 ```
+
 
 ```{bash}
 echo "Display all possible combinations of the element from each set, and only 
@@ -369,6 +373,9 @@ echo {con,pre}{sent,fer}{s,ed}
 echo "Delay or pause for a specified amount of time, here is 5 seconds."
 time sleep 5
 ```
+
+**The following code will lead to an unstoppable process for the server, so I 
+set it's `eval` value to be FALSE.**
 
 ```{bash eval=FALSE}
 echo "With no options, `history` displays the command history list with line 

@@ -549,7 +549,7 @@ cal 9 1752</code></pre>
 <pre class="bash"><code>echo &quot;Print the current time and date.&quot;
 date</code></pre>
 <pre><code>## Print the current time and date.
-## Tue Jan 18 05:32:39 UTC 2022</code></pre>
+## Tue Jan 18 05:54:53 UTC 2022</code></pre>
 <pre class="bash"><code>echo &quot;Print the current host&#39;s name.&quot;
 hostname</code></pre>
 <pre><code>## Print the current host&#39;s name.
@@ -575,18 +575,19 @@ who</code></pre>
 <pre class="bash"><code>echo &quot;Show who is logged on and what they are doing.&quot;
 w</code></pre>
 <pre><code>## Show who is logged on and what they are doing.
-##  05:32:39 up 15 days,  5:06,  4 users,  load average: 0.57, 0.35, 0.25
+##  05:54:53 up 15 days,  5:28,  4 users,  load average: 0.85, 0.33, 0.22
 ## USER     TTY      FROM             LOGIN@   IDLE   JCPU   PCPU WHAT
 ## tomokiok pts/1    42.166.94.34.bc. 11Jan22  7days  0.01s  0.01s -bash
 ## tomokiok pts/3    42.166.94.34.bc. 10Jan22  7days  0.83s  0.65s ssh -i /home/tomokiokuno0528/.ssh/id_rsa tomokiokuno0528@server.ucla-biostat-203b.com
-## maschepp pts/6    74.213.228.243   19:33    9:49m  0.03s  0.03s -bash
-## yllai    pts/16   cpe-172-91-85-15 05:29    3:03   0.01s  0.01s -bash</code></pre>
+## maschepp pts/6    74.213.228.243   19:33   10:11m  0.03s  0.03s -bash
+## yllai    pts/16   cpe-172-91-85-15 05:29   25:17   0.01s  0.01s -bash</code></pre>
 <pre class="bash"><code>echo &quot;Print user and group information for the specified USER, or (when USER 
 omitted) for the current user.&quot;
 id</code></pre>
 <pre><code>## Print user and group information for the specified USER, or (when USER 
 ## omitted) for the current user.
 ## uid=1004(yanlongbai975) gid=1006(yanlongbai975) groups=1006(yanlongbai975) context=system_u:system_r:initrc_t:s0</code></pre>
+<p><strong>The following code will lead to an unstoppable process for the server, so I set it’s <code>eval</code> value to be FALSE.</strong></p>
 <pre class="bash"><code>echo &quot;`Last`  searches  back through the file /var/log/wtmp (or the file 
 designated by the -f flag) and displays a list of all users logged in (and 
 out) since that file was created. And `head` is to display the first ten 
@@ -605,8 +606,9 @@ time sleep 5</code></pre>
 <pre><code>## Delay or pause for a specified amount of time, here is 5 seconds.
 ## 
 ## real 0m5.001s
-## user 0m0.001s
-## sys  0m0.000s</code></pre>
+## user 0m0.000s
+## sys  0m0.001s</code></pre>
+<p><strong>The following code will lead to an unstoppable process for the server, so I set it’s <code>eval</code> value to be FALSE.</strong></p>
 <pre class="bash"><code>echo &quot;With no options, `history` displays the command history list with line 
 numbers. And `tail` is to display the last 10 lines.&quot;
 history | tail</code></pre>
