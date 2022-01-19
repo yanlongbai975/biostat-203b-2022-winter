@@ -549,7 +549,7 @@ cal 9 1752</code></pre>
 <pre class="bash"><code>echo &quot;Print the current time and date.&quot;
 date</code></pre>
 <pre><code>## Print the current time and date.
-## Tue Jan 18 05:54:53 UTC 2022</code></pre>
+## Wed Jan 19 02:22:32 UTC 2022</code></pre>
 <pre class="bash"><code>echo &quot;Print the current host&#39;s name.&quot;
 hostname</code></pre>
 <pre><code>## Print the current host&#39;s name.
@@ -562,25 +562,27 @@ arch</code></pre>
 uname -a</code></pre>
 <pre><code>## Print all system information.
 ## Linux biostat-203b-teaching-server 3.10.0-1160.49.1.el7.x86_64 #1 SMP Tue Nov 30 15:51:32 UTC 2021 x86_64 x86_64 x86_64 GNU/Linux</code></pre>
-<pre class="bash"><code>echo &quot;No output for `who am i`.&quot;
+<pre class="bash"><code>echo &quot;Display the username of the current user.&quot;
 who am i</code></pre>
-<pre><code>## No output for .</code></pre>
+<pre><code>## Display the username of the current user.</code></pre>
 <pre class="bash"><code>echo &quot;Print information about users who are currently logged in.&quot;
 who</code></pre>
 <pre><code>## Print information about users who are currently logged in.
 ## tomokiokuno0528 pts/1        2022-01-11 01:13 (42.166.94.34.bc.googleusercontent.com)
 ## tomokiokuno0528 pts/3        2022-01-10 23:43 (42.166.94.34.bc.googleusercontent.com)
 ## maschepps pts/6        2022-01-17 19:33 (74.213.228.243)
-## yllai    pts/16       2022-01-18 05:29 (cpe-172-91-85-158.socal.res.rr.com)</code></pre>
+## lillyhuang25 pts/20       2022-01-19 01:13 (64.201.127.119)
+## inclassdemo pts/17       2022-01-19 00:20 (149.142.103.176)</code></pre>
 <pre class="bash"><code>echo &quot;Show who is logged on and what they are doing.&quot;
 w</code></pre>
 <pre><code>## Show who is logged on and what they are doing.
-##  05:54:53 up 15 days,  5:28,  4 users,  load average: 0.85, 0.33, 0.22
+##  02:22:32 up 16 days,  1:56,  5 users,  load average: 1.28, 0.59, 0.47
 ## USER     TTY      FROM             LOGIN@   IDLE   JCPU   PCPU WHAT
-## tomokiok pts/1    42.166.94.34.bc. 11Jan22  7days  0.01s  0.01s -bash
-## tomokiok pts/3    42.166.94.34.bc. 10Jan22  7days  0.83s  0.65s ssh -i /home/tomokiokuno0528/.ssh/id_rsa tomokiokuno0528@server.ucla-biostat-203b.com
-## maschepp pts/6    74.213.228.243   19:33   10:11m  0.03s  0.03s -bash
-## yllai    pts/16   cpe-172-91-85-15 05:29   25:17   0.01s  0.01s -bash</code></pre>
+## tomokiok pts/1    42.166.94.34.bc. 11Jan22  8days  0.01s  0.01s -bash
+## tomokiok pts/3    42.166.94.34.bc. 10Jan22  8days  0.91s  0.73s ssh -i /home/tomokiokuno0528/.ssh/id_rsa tomokiokuno0528@server.ucla-biostat-203b.com
+## maschepp pts/6    74.213.228.243   Mon19   30:39m  0.03s  0.03s -bash
+## lillyhua pts/20   64.201.127.119   01:13    1:09m  0.01s  0.01s -bash
+## inclassd pts/17   149.142.103.176  00:20   18:16   0.09s  0.09s -bash</code></pre>
 <pre class="bash"><code>echo &quot;Print user and group information for the specified USER, or (when USER 
 omitted) for the current user.&quot;
 id</code></pre>
@@ -605,9 +607,9 @@ echo {con,pre}{sent,fer}{s,ed}</code></pre>
 time sleep 5</code></pre>
 <pre><code>## Delay or pause for a specified amount of time, here is 5 seconds.
 ## 
-## real 0m5.001s
-## user 0m0.000s
-## sys  0m0.001s</code></pre>
+## real 0m5.002s
+## user 0m0.002s
+## sys  0m0.000s</code></pre>
 <p><strong>The following code will lead to an unstoppable process for the server, so I set it’s <code>eval</code> value to be FALSE.</strong></p>
 <pre class="bash"><code>echo &quot;With no options, `history` displays the command history list with line 
 numbers. And `tail` is to display the last 10 lines.&quot;

@@ -330,7 +330,7 @@ uname -a
 ```
 
 ```{bash}
-echo "No output for `who am i`."
+echo "Display the username of the current user."
 who am i
 ```
 
