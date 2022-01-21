@@ -318,6 +318,7 @@ pre code {
 </div>
 <div id="answer-2" class="section level3">
 <h3>Answer</h3>
+<p><strong>For Q3.5, I used command “awk ‘NR &gt; 1 {print}’” to omit the first line for printing.</strong></p>
 <pre class="bash"><code>gzip -cd /mnt/mimiciv/1.0/core/admissions.csv.gz |
 awk &#39;NR &gt; 1 {print}&#39; | head -10
 echo Unique patients number:
@@ -418,13 +419,41 @@ awk -F: &#39;{FS=&quot;,&quot;} {print $12}&#39;| sort -u</code></pre>
 </div>
 <div id="answer-5" class="section level3">
 <h3>Answer</h3>
+<p><strong>Here I notice that there may be more than one name in the same line, so I use the command “grep -o” to print only the matched (non-empty) parts of a matching line, with each such part on a separate output line. And this method will solve the “multiple names in the same line” problem.</strong></p>
 <pre class="bash"><code>    wget -nc http://www.gutenberg.org/cache/epub/42671/pg42671.txt
     for char in Elizabeth Jane Lydia Darcy
     do
       echo $char:
       grep -o $char pg42671.txt | wc -l
     done</code></pre>
-<pre><code>## File ‘pg42671.txt’ already there; not retrieving.
+<pre><code>## --2022-01-21 18:58:25--  http://www.gutenberg.org/cache/epub/42671/pg42671.txt
+## Resolving www.gutenberg.org (www.gutenberg.org)... 152.19.134.47, 2610:28:3090:3000:0:bad:cafe:47
+## Connecting to www.gutenberg.org (www.gutenberg.org)|152.19.134.47|:80... connected.
+## HTTP request sent, awaiting response... 302 Found
+## Location: https://www.gutenberg.org/cache/epub/42671/pg42671.txt [following]
+## --2022-01-21 18:58:25--  https://www.gutenberg.org/cache/epub/42671/pg42671.txt
+## Connecting to www.gutenberg.org (www.gutenberg.org)|152.19.134.47|:443... connected.
+## HTTP request sent, awaiting response... 200 OK
+## Length: 725060 (708K) [text/plain]
+## Saving to: ‘pg42671.txt’
+## 
+##      0K .......... .......... .......... .......... ..........  7%  704K 1s
+##     50K .......... .......... .......... .......... .......... 14%  703K 1s
+##    100K .......... .......... .......... .......... .......... 21%  110M 1s
+##    150K .......... .......... .......... .......... .......... 28%  119M 0s
+##    200K .......... .......... .......... .......... .......... 35%  704K 0s
+##    250K .......... .......... .......... .......... .......... 42%  150M 0s
+##    300K .......... .......... .......... .......... .......... 49%  208M 0s
+##    350K .......... .......... .......... .......... .......... 56%  195M 0s
+##    400K .......... .......... .......... .......... .......... 63%  713K 0s
+##    450K .......... .......... .......... .......... .......... 70%  130M 0s
+##    500K .......... .......... .......... .......... .......... 77%  184M 0s
+##    550K .......... .......... .......... .......... .......... 84%  184M 0s
+##    600K .......... .......... .......... .......... .......... 91%  174M 0s
+##    650K .......... .......... .......... .......... .......... 98%  202M 0s
+##    700K ........                                              100%  212M=0.3s
+## 
+## 2022-01-21 18:58:30 (2.41 MB/s) - ‘pg42671.txt’ saved [725060/725060]
 ## 
 ## Elizabeth:
 ## 634
@@ -549,7 +578,7 @@ cal 9 1752</code></pre>
 <pre class="bash"><code>echo &quot;Print the current time and date.&quot;
 date</code></pre>
 <pre><code>## Print the current time and date.
-## Wed Jan 19 02:22:32 UTC 2022</code></pre>
+## Fri Jan 21 18:58:31 UTC 2022</code></pre>
 <pre class="bash"><code>echo &quot;Print the current host&#39;s name.&quot;
 hostname</code></pre>
 <pre><code>## Print the current host&#39;s name.
@@ -570,19 +599,15 @@ who</code></pre>
 <pre><code>## Print information about users who are currently logged in.
 ## tomokiokuno0528 pts/1        2022-01-11 01:13 (42.166.94.34.bc.googleusercontent.com)
 ## tomokiokuno0528 pts/3        2022-01-10 23:43 (42.166.94.34.bc.googleusercontent.com)
-## maschepps pts/6        2022-01-17 19:33 (74.213.228.243)
-## lillyhuang25 pts/20       2022-01-19 01:13 (64.201.127.119)
-## inclassdemo pts/17       2022-01-19 00:20 (149.142.103.176)</code></pre>
+## capj245  pts/13       2022-01-21 03:54 (s-164-67-232-61.resnet.ucla.edu)</code></pre>
 <pre class="bash"><code>echo &quot;Show who is logged on and what they are doing.&quot;
 w</code></pre>
 <pre><code>## Show who is logged on and what they are doing.
-##  02:22:32 up 16 days,  1:56,  5 users,  load average: 1.28, 0.59, 0.47
+##  18:58:31 up 18 days, 18:32,  3 users,  load average: 0.79, 0.38, 0.23
 ## USER     TTY      FROM             LOGIN@   IDLE   JCPU   PCPU WHAT
-## tomokiok pts/1    42.166.94.34.bc. 11Jan22  8days  0.01s  0.01s -bash
-## tomokiok pts/3    42.166.94.34.bc. 10Jan22  8days  0.91s  0.73s ssh -i /home/tomokiokuno0528/.ssh/id_rsa tomokiokuno0528@server.ucla-biostat-203b.com
-## maschepp pts/6    74.213.228.243   Mon19   30:39m  0.03s  0.03s -bash
-## lillyhua pts/20   64.201.127.119   01:13    1:09m  0.01s  0.01s -bash
-## inclassd pts/17   149.142.103.176  00:20   18:16   0.09s  0.09s -bash</code></pre>
+## tomokiok pts/1    42.166.94.34.bc. 11Jan22 10days  0.01s  0.01s -bash
+## tomokiok pts/3    42.166.94.34.bc. 10Jan22 10days  1.21s  1.03s ssh -i /home/tomokiokuno0528/.ssh/id_rsa tomokiokuno0528@server.ucla-biostat-203b.com
+## capj245  pts/13   s-164-67-232-61. 03:54   15:03m  0.01s  0.01s -bash</code></pre>
 <pre class="bash"><code>echo &quot;Print user and group information for the specified USER, or (when USER 
 omitted) for the current user.&quot;
 id</code></pre>
@@ -608,7 +633,7 @@ time sleep 5</code></pre>
 <pre><code>## Delay or pause for a specified amount of time, here is 5 seconds.
 ## 
 ## real 0m5.002s
-## user 0m0.002s
+## user 0m0.001s
 ## sys  0m0.000s</code></pre>
 <p><strong>The following code will lead to an unstoppable process for the server, so I set it’s <code>eval</code> value to be FALSE.</strong></p>
 <pre class="bash"><code>echo &quot;With no options, `history` displays the command history list with line 
