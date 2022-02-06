@@ -13,16 +13,17 @@ Display machine information for reproducibility:
 sessionInfo()
 ```
 
+
 ```{r setup, message=F}
-knitr::opts_chunk$set(echo = TRUE, cache = TRUE, cache.lazy = FALSE)
 install.packages('R.utils')
+knitr::opts_chunk$set(echo = TRUE, cache = TRUE, cache.lazy = FALSE)
 library(R.utils)
 library(tidyverse)
 library(data.table)
 library(lubridate)
 ```
 
-```{r}
+```{r, eval =FALSE}
 os <- sessionInfo()$running
 if (str_detect(os, "Linux")) {
   mimic_path <- "/mnt/mimiciv/1.0"
@@ -33,7 +34,7 @@ if (str_detect(os, "Linux")) {
 
 In this exercise, we use tidyverse (ggpot2, dplyr, etc) to explore the [MIMIC-IV](https://mimic.mit.edu/docs/iv/) data introduced in [homework 1](https://ucla-biostat-203b.github.io/2022winter/hw/hw1/hw1.html) and to build a cohort of ICU stays.
 
-```{r}
+```{r, eval=FALSE}
 # tree -s -L 2 /Users/huazhou/Documents/Box\ Sync/MIMIC/mimic-iv-1.0
 system(str_c("tree -s -L 2 ", shQuote(mimic_path)), intern = TRUE)
 ```
@@ -60,7 +61,7 @@ For later questions, we stick to the tidyverse.
 ## Q2. ICU stays
 
 `icustays.csv.gz` (<https://mimic.mit.edu/docs/iv/modules/icu/icustays/>) contains data about Intensive Care Units (ICU) stays. The first 10 lines are
-```{r}
+```{r, eval=FALSE}
 system(
   str_c(
     "zcat < ", 
@@ -77,6 +78,7 @@ system(
 
 ```{r}
 icustays_tble = read_csv("/Users/a123456/biostat-203b-2022-winter/1.0/icu/icustays.csv.gz")
+icustays_tble
 ```
 
 2. How many unique `subject_id`? Can a `subject_id` have multiple ICU stays? 
@@ -88,7 +90,7 @@ distinct(icustays_tble, subject_id, .keep_all = TRUE) %>%
   summarise(n = n())
 ```
 
-The result indicates that there are only 53150 unique `subject_id`s, which is much less than the total number.
+The result indicates that there are only 53150 unique `subject_id`s, which is much less than the total number (76540).
 So there must be some `subject_id`s having multiple ICU stays.
 
 3. For each `subject_id`, let's only keep the first ICU stay in the tibble `icustays_tble`.
@@ -98,12 +100,13 @@ So there must be some `subject_id`s having multiple ICU stays.
 ```{r}
 icustays_tble = arrange(icustays_tble, subject_id, intime) %>%
   distinct(subject_id, .keep_all = TRUE)
+icustays_tble
 ```
 
 ## Q3. `admission` data
 
 Information of the patients admitted into hospital is available in `admissions.csv.gz`. See <https://mimic.mit.edu/docs/iv/modules/core/admissions/> for details of each field in this file. The first 10 lines are
-```{r}
+```{r, eval=FALSE}
 system(
   str_c(
     "zcat < ", 
@@ -120,6 +123,7 @@ system(
 
 ```{r}
 admissions_tble = read_csv("/Users/a123456/biostat-203b-2022-winter/1.0/core/admissions.csv.gz")
+admissions_tble
 ```
 
 2. Let's only keep the admissions that have a match in `icustays_tble` according to `subject_id` and `hadmi_id`.
@@ -157,6 +161,7 @@ while (i < 523741) {
   i = i + 1
 }
 admissions_tble = testtib
+admissions_tble
 ```
 
 If you want to use the filtered tibble "icustays_tble" to select "admissions_tble", the result is the following.
@@ -164,6 +169,7 @@ If you want to use the filtered tibble "icustays_tble" to select "admissions_tbl
 ```{r}
 admissions_tble = arrange(admissions_tble, subject_id, admittime)
 admissions_tble_filtered = distinct(admissions_tble, subject_id, .keep_all = TRUE)
+admissions_tble_filtered
 ```
 
 
@@ -177,6 +183,9 @@ admissions_tble_filtered = distinct(admissions_tble, subject_id, .keep_all = TRU
 
 **Solution**
 
+RMK: for the following images, I use the `admissions_tble` instead of the `admissions_tble_filtered`, so if the
+images have little difference with your answer, this is the reason!!!
+
 For "admission year":
 
 ```{r}
@@ -186,6 +195,7 @@ ad_year = as.character(admissions_tble[[3]]) %>%
 y = as.data.frame(ad_year)
 ggplot(data = y) + 
   geom_bar(mapping = aes(x = ad_year))
+remove(y)
 ```
 
 For "admission month":
@@ -197,6 +207,7 @@ ad_month = as.character(admissions_tble[[3]]) %>%
 m = as.data.frame(ad_month)
 ggplot(data = m) + 
   geom_bar(mapping = aes(x = ad_month))
+remove(m)
 ```
 
 For "admission month day":
@@ -206,28 +217,33 @@ ad_monthday = as.character(admissions_tble[[3]]) %>%
   substring(9, 10) %>%
   as.numeric()
 md = as.data.frame(ad_monthday)
-ggplot(data = m) + 
+ggplot(data = md) + 
   geom_bar(mapping = aes(x = ad_monthday))
+remove(md)
 ```
 
 For "admission week day" (RMK: "0" represents Sunday):
 
 ```{r}
-
+weekday = NULL
 c = 0
 y = 0
 week = 0
 i = 1
+year = 0
+month = 0
 ad_weekday = as.data.frame(weekday, matrix(nrow = 0, ncol = 1, dimnames = list(NULL, "weekday")))
 #Zeller's congruence (the following code is written by myself)
 while (i < 69212) {
+  year = ad_year[i]
+  month = ad_month[i]
   if(ad_month[i] == 1 || ad_month[i] == 2){
   year = ad_year[i] - 1
   month = ad_month[i] + 12
   }
   c = year %/% 100
   y = year - c * 100
-  week = y + y %/% 4 + c %/% 4 - 2 * c + (26 * (month + 1)) %/% 10 + day - 1
+  week = y + y %/% 4 + c %/% 4 - 2 * c + (26 * (month + 1)) %/% 10 + ad_monthday[i] - 1
   while (week < 0) {
     week = week + 7
   }
@@ -237,6 +253,7 @@ while (i < 69212) {
 }
 ggplot(data = ad_weekday) + 
   geom_bar(mapping = aes(x = week))
+remove(c, i, month, week, weekday, y, year, ad_weekday, ad_month, ad_monthday, ad_year)
 ```
 
 For "admission hour":
@@ -248,12 +265,13 @@ ad_hour = as.character(admissions_tble[[3]]) %>%
 hr = as.data.frame(ad_hour)
 ggplot(data = hr) + 
   geom_bar(mapping = aes(x = ad_hour))
+remove(ad_hour, hr)
 ```
 
 ## Q4. `patients` data
 
 Patient information is available in `patients.csv.gz`. See <https://mimic.mit.edu/docs/iv/modules/core/patients/> for details of each field in this file. The first 10 lines are
-```{r}
+```{r, eval=FALSE}
 system(
   str_c(
     "zcat < ", 
@@ -291,27 +309,29 @@ while (i < 382279) {
   i = i + 1
 }
 patients_tble = testtib
+patients_tble
 ```
 
 2. Summarize variables `gender` and `anchor_age`, and explain any patterns you see.
 
 **Solution**
 
+```{r}
+summary(as.factor(patients_tble[[2]]))# the total number of observations of two sexes.
+summary(patients_tble[[3]])# the overall summary statistics of "anchor_age".
+patients_tble %>%
+group_by(gender) %>%
+  summarise(mean(anchor_age, na.rm = TRUE))# the mean value of "anchor_age" of each gender.
+```
+
 From the result, we can see that the mean values of `anchor_age` for different gender are similar.
 There is no obvious evidence to indicate a significant difference of the mean value for different genders.
 
-```{r}
-summary(as.factor(patients_tble[[2]]))
-summary(patients_tble[[3]])
-patients_tble %>%
-group_by(gender) %>%
-  summarise(mean(anchor_age, na.rm = TRUE))
-```
 
 ## Q5. Lab results
 
 `labevents.csv.gz` (<https://mimic.mit.edu/docs/iv/modules/hosp/labevents/>) contains all laboratory measurements for patients. The first 10 lines are
-```{r}
+```{r, eval=FALSE}
 system(
   str_c(
     "zcat < ", 
@@ -322,7 +342,7 @@ system(
 )
 ```
 `d_labitems.csv.gz` is the dictionary of lab measurements. 
-```{r}
+```{r, eval=FALSE}
 system(
   str_c(
     "zcat < ", 
@@ -402,6 +422,7 @@ while (i <273582) {
   i = i + 1
 }
 labevents_tble = testtib
+labevents_tble
 ```
 
 4. Summarize the lab measurements by appropriate numerics and graphics. 
@@ -409,19 +430,19 @@ labevents_tble = testtib
 **Solution**
 
 ```{r}
-summary(labevents_tble[[4]])
+summary(labevents_tble[[4]])# the overall summary statistics of "valuenum".
 labevents_tble %>%
   group_by(itemid) %>%
-      summarise(mean(valuenum, na.rm = TRUE))
+      summarise(mean(valuenum, na.rm = TRUE))# the mean values of "valuenum" of different "itemid".
 labevents_tble %>%
   ggplot() + 
-  geom_boxplot(mapping = aes(x = as.character(itemid), y = valuenum)) 
+  geom_boxplot(mapping = aes(x = as.character(itemid), y = valuenum)) # the boxplot of "valuenum" of different "itemid".
 ```
 
 ## Q6. Vitals from charted events
 
 `chartevents.csv.gz` (<https://mimic.mit.edu/docs/iv/modules/icu/chartevents/>) contains all the charted data available for a patient. During their ICU stay, the primary repository of a patient’s information is their electronic chart. The `itemid` variable indicates a single measurement type in the database. The `value` variable is the value measured for `itemid`. The first 10 lines of `chartevents.csv.gz` are
-```{r}
+```{r, eval=FALSE}
 system(
   str_c(
     "zcat < ", 
@@ -431,7 +452,7 @@ system(
 )
 ```
 `d_items.csv.gz` (<https://mimic.mit.edu/docs/iv/modules/icu/d_items/>) is the dictionary for the `itemid` in `chartevents.csv.gz`. 
-```{r}
+```{r, eval=FALSE}
 system(
   str_c(
     "zcat < ", 
@@ -451,7 +472,7 @@ Same as Q5.2, here I set `eval = FALSE`.
 icustays_tble = read_csv("/Users/a123456/biostat-203b-2022-winter/1.0/icu/icustays.csv.gz")
 chartevents_tble = read_csv("/Users/a123456/biostat-203b-2022-winter/1.0/icu/chartevents_filtered_itemid.csv.gz")
 chartevents_tble = arrange(chartevents_tble, subject_id, hadm_id)
-icustays_tble = arrange(icustays_tble, subject_id, hadm_id)
+icustays_tble = arrange(icustays_tble, subject_id, hadm_id, intime)
 testtib = chartevents_tble[0,]
 i = 1
 j = 1
@@ -481,13 +502,15 @@ chartevents_tble = testtib
 
 2. Further restrict `chartevents_tble` to the first vital measurement during the ICU stay. 
 
+**Solution**
+
 ```{r}
 icustays_tble = read_csv("/Users/a123456/biostat-203b-2022-winter/1.0/icu/icustays.csv.gz")
 chartevents_tble = read_csv("/Users/a123456/biostat-203b-2022-winter/1.0/icu/chartevents_filtered_itemid.csv.gz")
 chartevents_tble = arrange(chartevents_tble, subject_id, charttime) %>%
   distinct(subject_id, .keep_all = TRUE) #RMK, here I add "charttime" into the function "arrange()" in order to select the first vital measurement during the ICU stay for each patient
 
-icustays_tble = arrange(icustays_tble, subject_id, hadm_id)
+icustays_tble = arrange(icustays_tble, subject_id, hadm_id, intime)
 
 testtib = chartevents_tble[0,]
 i = 1
@@ -512,6 +535,7 @@ while (i < 53151) {
   i = i + 1
 }
 chartevents_tble = testtib
+chartevents_tble
 ```
 
 3. Summarize these vital measurements by appropriate numerics and graphics. 
@@ -519,13 +543,13 @@ chartevents_tble = testtib
 **Solution**
 
 ```{r}
-summary(chartevents_tble[[6]])
+summary(chartevents_tble[[6]])# the overall "valuenum"
 chartevents_tble %>%
   group_by(itemid) %>%
-      summarise(mean(valuenum, na.rm = TRUE))
+      summarise(mean(valuenum, na.rm = TRUE))# the mean values of "valuenum" of different "itemid".
 chartevents_tble %>%
   ggplot() + 
-  geom_boxplot(mapping = aes(x = as.character(itemid), y = valuenum)) 
+  geom_boxplot(mapping = aes(x = as.character(itemid), y = valuenum)) # the boxplot of "valuenum" of different "itemid".
 
 ```
 
@@ -564,6 +588,9 @@ RMK: here I choose to use `full_join` instead of `left_join` since some observat
 If Dr. Zhou asked us to give all observations containing complete data, I will commit this is my mistake.
 
 ```{r}
+icustays_tble = read_csv("/Users/a123456/biostat-203b-2022-winter/1.0/icu/icustays.csv.gz")
+icustays_tble = arrange(icustays_tble, subject_id, intime) %>%
+  distinct(subject_id, .keep_all = TRUE)
 mimic_icu_cohort = full_join(icustays_tble, admissions_tble_filtered, by = "subject_id") %>%
   full_join(patients_tble, by = "subject_id") %>%
   full_join(labevents_tble, by = "subject_id") %>%
@@ -604,6 +631,8 @@ while (i < 53151) {
 }
 #mimic_icu_cohort$thirty_day_mort = mimic_icu_cohort[38]
 mimic_icu_cohort = mimic_icu_cohort[-c(36:37)] #delete all intermediate columns that used to obtain column "thirty_day_mort".
+mimic_icu_cohort %>% 
+  print(n = 10, width = Inf)
 ```
 
 
