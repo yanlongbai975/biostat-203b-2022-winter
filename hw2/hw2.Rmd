@@ -258,7 +258,47 @@ system(
 
 1. Import `patients.csv.gz` (<https://mimic.mit.edu/docs/iv/modules/core/patients/>) as a tibble `patients_tble` and only keep the patients who have a match in `icustays_tble` (according to `subject_id`).
 
+**Solution**
+
+```{r}
+icustays_tble = arrange(icustays_tble, subject_id, intime) %>%
+  distinct(subject_id, .keep_all = TRUE)
+patients_tble = read_csv("/Users/a123456/biostat-203b-2022-winter/1.0/core/patients.csv.gz")
+testtib = patients_tble[0,]
+i = 1
+j = 1
+patients_tble = arrange(patients_tble, subject_id)
+icustays_tble = arrange(icustays_tble, subject_id)
+while (i < 382279) {
+  while (j < 53151) {
+    if(icustays_tble[j,1] == patients_tble[i,1]){
+        testtib = add_row(testtib, patients_tble[i,])
+        j = j + 1
+    }else if(icustays_tble[j,1] < patients_tble[i,1]){
+      j = j + 1
+    }else{
+      break
+    }
+  }
+  i = i + 1
+}
+patients_tble = testtib
+```
+
 2. Summarize variables `gender` and `anchor_age`, and explain any patterns you see.
+
+**Solution**
+
+From the result, we can see that the mean values of `anchor_age` for different gender are similar.
+There is no obvious evidence to indicate a significant difference of the mean value for different genders.
+
+```{r}
+summary(as.factor(patients_tble[[2]]))
+summary(patients_tble[[3]])
+patients_tble %>%
+group_by(gender) %>%
+  summarise(mean(anchor_age, na.rm = TRUE))
+```
 
 ## Q5. Lab results
 
