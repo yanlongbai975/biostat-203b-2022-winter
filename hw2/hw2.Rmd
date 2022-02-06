@@ -576,33 +576,34 @@ while (i < 53151) {
 }
 
 i = 1
+mimic_icu_cohort$thirty_day_mort = "0"
 while (i < 53151) {
   if(str_length(mimic_icu_cohort[i,37]) != 20){
     if(str_length(mimic_icu_cohort[i,37]) < 23){
-      mimic_icu_cohort[i, 38] = 1
+      mimic_icu_cohort[i, 38] = "1"
       i = i + 1
     }else if(str_length(mimic_icu_cohort[i,37]) > 23){
-       mimic_icu_cohort[i, 38] = 0
+       mimic_icu_cohort[i, 38] = "0"
        i = i + 1
     }else{
       dtime = mimic_icu_cohort[i,37] %>%
       substring(18, 22) %>%
       as.numeric()
         if(dtime < 43201){
-        mimic_icu_cohort[i, 38] = 1
+        mimic_icu_cohort[i, 38] = "1"
         i = i + 1
         }else{
-        mimic_icu_cohort[i, 38] = 0
+        mimic_icu_cohort[i, 38] = "0"
         i = i + 1
         }
     }
   }else{
-    mimic_icu_cohort[i, 38] = 0
+    mimic_icu_cohort[i, 38] = "0"
     i = i + 1
   }
 }
-mimic_icu_cohort$thirty_day_mort = mimic_icu_cohort[38]
-mimic_icu_cohort = mimic_icu_cohort[-c(36:38)] #delete all intermediate columns that used to obtain column "thirty_day_mort".
+#mimic_icu_cohort$thirty_day_mort = mimic_icu_cohort[38]
+mimic_icu_cohort = mimic_icu_cohort[-c(36:37)] #delete all intermediate columns that used to obtain column "thirty_day_mort".
 ```
 
 
@@ -610,11 +611,80 @@ mimic_icu_cohort = mimic_icu_cohort[-c(36:38)] #delete all intermediate columns 
 
 Summarize following information using appropriate numerics or graphs.
 
+**Solution**
+
 - `thirty_day_mort` vs demographic variables (ethnicity, language, insurance, marital_status, gender, age at hospital admission)
+
+
+`thirty_day_mort` vs `ethnicity`
+
+```{r}
+ggplot(data = mimic_icu_cohort) + 
+  geom_bar(mapping = aes(x = ethnicity, fill = thirty_day_mort))
+```
+
+`thirty_day_mort` vs `language`
+
+```{r}
+ggplot(data = mimic_icu_cohort) + 
+  geom_bar(mapping = aes(x = language, fill = thirty_day_mort))
+```
+
+`thirty_day_mort` vs `insurance`
+
+```{r}
+ggplot(data = mimic_icu_cohort) + 
+  geom_bar(mapping = aes(x = insurance, fill = thirty_day_mort))
+```
+
+`thirty_day_mort` vs `marital_status`
+
+```{r}
+ggplot(data = mimic_icu_cohort) + 
+  geom_bar(mapping = aes(x = marital_status, fill = thirty_day_mort))
+```
+
+`thirty_day_mort` vs `gender`
+
+```{r}
+ggplot(data = mimic_icu_cohort) + 
+  geom_bar(mapping = aes(x = gender, fill = thirty_day_mort))
+```
+
+`thirty_day_mort` vs `age at hospital admission`
+
+```{r}
+ggplot(data = mimic_icu_cohort) + 
+  geom_bar(mapping = aes(x = anchor_age, fill = thirty_day_mort))
+```
+
 
 - `thirty_day_mort` vs first lab measurements
 
+```{r}
+mimic_icu_cohort$test = mimic_icu_cohort$itemid.x #here since the orginal column type of "itemid.x" is numeric, there will be much blank in x-axis, so I create a new variable "test" to convert the column type to factor.
+mimic_icu_cohort$test = as.factor(mimic_icu_cohort$test)
+ggplot(data = mimic_icu_cohort) + 
+  geom_bar(mapping = aes(x = test, fill = thirty_day_mort))
+mimic_icu_cohort = mimic_icu_cohort[-37]
+
+```
+
 - `thirty_day_mort` vs first vital measurements
 
+```{r}
+mimic_icu_cohort$test = mimic_icu_cohort$itemid.y #Similar as above.
+mimic_icu_cohort$test = as.factor(mimic_icu_cohort$test)
+ggplot(data = mimic_icu_cohort) + 
+  geom_bar(mapping = aes(x = test, fill = thirty_day_mort))
+mimic_icu_cohort = mimic_icu_cohort[-37]
+
+```
+
 - `thirty_day_mort` vs first ICU unit
+
+```{r}
+ggplot(data = mimic_icu_cohort) + 
+  geom_bar(mapping = aes(x = first_careunit, fill = thirty_day_mort))
+```
 
