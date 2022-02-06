@@ -159,6 +159,14 @@ while (i < 523741) {
 admissions_tble = testtib
 ```
 
+If you want to use the filtered tibble "icustays_tble" to select "admissions_tble", the result is the following.
+
+```{r}
+admissions_tble = arrange(admissions_tble, subject_id, admittime)
+admissions_tble_filtered = distinct(admissions_tble, subject_id, .keep_all = TRUE)
+```
+
+
 3. Summarize the following variables by graphics. 
 
 - admission year  
@@ -345,7 +353,8 @@ But for the Q5.3, we can see this cycle indeed works.
 ```{r, eval=FALSE}
 labevents_tble = read_csv("/Users/a123456/biostat-203b-2022-winter/1.0/hosp/labevents_filtered_itemid.csv.gz")
 labevents_tble = arrange(labevents_tble, subject_id)
-icustays_tble = arrange(icustays_tble, subject_id)
+icustays_tble = arrange(icustays_tble, subject_id) %>%
+  distinct(subject_id, .keep_all = TRUE)
 testtib = labevents_tble[0,]
 i = 1
 j = 1
@@ -372,9 +381,10 @@ labevents_tble = testtib
 
 ```{r}
 labevents_tble = read_csv("/Users/a123456/biostat-203b-2022-winter/1.0/hosp/labevents_filtered_itemid.csv.gz")
-labevents_tble = arrange(labevents_tble, subject_id) %>%
+labevents_tble = arrange(labevents_tble, subject_id, charttime) %>%
   distinct(subject_id, .keep_all = TRUE) 
-icustays_tble = arrange(icustays_tble, subject_id)
+icustays_tble = arrange(icustays_tble, subject_id) %>%
+  distinct(subject_id, .keep_all = TRUE)
 testtib = labevents_tble[0,]
 i = 1
 j = 1
@@ -547,6 +557,54 @@ and columns contain at least following variables
 - first lab measurements during ICU stay  
 - first vital measurements during ICU stay
 - an indicator variable `thirty_day_mort` whether the patient died within 30 days of hospital admission (30 day mortality)
+
+**Solution**
+
+RMK: here I choose to use `full_join` instead of `left_join` since some observations only contain partial data.
+If Dr. Zhou asked us to give all observations containing complete data, I will commit this is my mistake.
+
+```{r}
+mimic_icu_cohort = full_join(icustays_tble, admissions_tble_filtered, by = "subject_id") %>%
+  full_join(patients_tble, by = "subject_id") %>%
+  full_join(labevents_tble, by = "subject_id") %>%
+  full_join(chartevents_tble, by = "subject_id")
+mimic_icu_cohort$thirty_day_mort_time = mimic_icu_cohort[, 12] - mimic_icu_cohort[, 10]
+i = 1
+while (i < 53151) {
+  mimic_icu_cohort[i, 37] = as.character(mimic_icu_cohort[i, 36])
+  i = i + 1
+}
+
+i = 1
+while (i < 53151) {
+  if(str_length(mimic_icu_cohort[i,37]) != 20){
+    if(str_length(mimic_icu_cohort[i,37]) < 23){
+      mimic_icu_cohort[i, 38] = 1
+      i = i + 1
+    }else if(str_length(mimic_icu_cohort[i,37]) > 23){
+       mimic_icu_cohort[i, 38] = 0
+       i = i + 1
+    }else{
+      dtime = mimic_icu_cohort[i,37] %>%
+      substring(18, 22) %>%
+      as.numeric()
+        if(dtime < 43201){
+        mimic_icu_cohort[i, 38] = 1
+        i = i + 1
+        }else{
+        mimic_icu_cohort[i, 38] = 0
+        i = i + 1
+        }
+    }
+  }else{
+    mimic_icu_cohort[i, 38] = 0
+    i = i + 1
+  }
+}
+mimic_icu_cohort$thirty_day_mort = mimic_icu_cohort[38]
+mimic_icu_cohort = mimic_icu_cohort[-c(36:38)] #delete all intermediate columns that used to obtain column "thirty_day_mort".
+```
+
 
 ## Q8. Exploratory data analysis (EDA)
 
