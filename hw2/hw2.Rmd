@@ -433,9 +433,105 @@ system(
 
 1. We are interested in the vitals for ICU patients: heart rate (220045), mean non-invasive blood pressure (220181), systolic non-invasive blood pressure (220179), body temperature in Fahrenheit (223761), and respiratory rate (220210). Retrieve a subset of `chartevents.csv.gz` only containing these items for the patients in `icustays_tble` as a tibble `chartevents_tble`.
 
+**Solution**
+
+Same as Q5.2, here I set `eval = FALSE`.
+
+```{r, eval=FALSE}
+icustays_tble = read_csv("/Users/a123456/biostat-203b-2022-winter/1.0/icu/icustays.csv.gz")
+chartevents_tble = read_csv("/Users/a123456/biostat-203b-2022-winter/1.0/icu/chartevents_filtered_itemid.csv.gz")
+chartevents_tble = arrange(chartevents_tble, subject_id, hadm_id)
+icustays_tble = arrange(icustays_tble, subject_id, hadm_id)
+testtib = chartevents_tble[0,]
+i = 1
+j = 1
+while (i < 23679058) {
+  while (j < 76541) {
+    if(icustays_tble[j,1] == chartevents_tble[i,1]){
+      if(icustays_tble[j,2] == chartevents_tble[i,2]){
+        testtib = add_row(testtib, chartevents_tble[i,])
+        break
+      }else if(icustays_tble[j,2] < chartevents_tble[i,2]){
+        j = j + 1
+      }else {
+        break
+      }
+    }else if(icustays_tble[j,1] < chartevents_tble[i,1]){
+      j = j + 1
+    }else{
+      break
+    }
+  }
+  i = i + 1
+}
+chartevents_tble = testtib
+
+```
+
+
 2. Further restrict `chartevents_tble` to the first vital measurement during the ICU stay. 
 
+```{r}
+icustays_tble = read_csv("/Users/a123456/biostat-203b-2022-winter/1.0/icu/icustays.csv.gz")
+chartevents_tble = read_csv("/Users/a123456/biostat-203b-2022-winter/1.0/icu/chartevents_filtered_itemid.csv.gz")
+chartevents_tble = arrange(chartevents_tble, subject_id, charttime) %>%
+  distinct(subject_id, .keep_all = TRUE) #RMK, here I add "charttime" into the function "arrange()" in order to select the first vital measurement during the ICU stay for each patient
+
+icustays_tble = arrange(icustays_tble, subject_id, hadm_id)
+
+testtib = chartevents_tble[0,]
+i = 1
+j = 1
+while (i < 53151) {
+  while (j < 76541) {
+    if(icustays_tble[j,1] == chartevents_tble[i,1]){
+      if(icustays_tble[j,2] == chartevents_tble[i,2]){
+        testtib = rbind(testtib, chartevents_tble[i,])
+        break
+      }else if(icustays_tble[j,2] < chartevents_tble[i,2]){
+        j = j + 1
+      }else {
+        break
+      }
+    }else if(icustays_tble[j,1] < chartevents_tble[i,1]){
+      j = j + 1
+    }else{
+      break
+    }
+  }
+  i = i + 1
+}
+chartevents_tble = testtib
+```
+
 3. Summarize these vital measurements by appropriate numerics and graphics. 
+
+**Solution**
+
+```{r}
+summary(chartevents_tble[[6]])
+chartevents_tble %>%
+  group_by(itemid) %>%
+      summarise(mean(valuenum, na.rm = TRUE))
+chartevents_tble %>%
+  ggplot() + 
+  geom_boxplot(mapping = aes(x = as.character(itemid), y = valuenum)) 
+
+```
+
+I noticed that whose subject_id is "14948967" and hadm_id is "28516090" has a really large valuenum which may be a mistake, so I tried to make a new plot without this observation.
+
+```{r}
+chartevents_tblenew = chartevents_tble[chartevents_tble$valuenum < 10000,]
+summary(chartevents_tblenew[[6]])
+chartevents_tblenew %>%
+  group_by(itemid) %>%
+      summarise(mean(valuenum, na.rm = TRUE))
+chartevents_tblenew %>%
+  ggplot() + 
+  geom_boxplot(mapping = aes(x = as.character(itemid), y = valuenum)) 
+
+```
 
 ## Q7. Putting things together
 
