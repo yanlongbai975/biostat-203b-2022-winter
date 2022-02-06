@@ -273,7 +273,7 @@ while (i < 382279) {
   while (j < 53151) {
     if(icustays_tble[j,1] == patients_tble[i,1]){
         testtib = add_row(testtib, patients_tble[i,])
-        j = j + 1
+        break
     }else if(icustays_tble[j,1] < patients_tble[i,1]){
       j = j + 1
     }else{
@@ -327,12 +327,86 @@ system(
 
 1. Find how many rows are in `labevents.csv.gz`.
 
+**Solution**
+
+```{bash}
+gzip -cd "/Users/a123456/biostat-203b-2022-winter/1.0/hosp/labevents.csv.gz" | wc -l
+```
+
 2. We are interested in the lab measurements of creatinine (50912), potassium (50971), sodium (50983), chloride (50902), bicarbonate (50882), hematocrit (51221), white blood cell count (51301), glucose (50931), magnesium (50960), and calcium (50893). Retrieve a subset of `labevents.csv.gz` only containing these items for the patients in `icustays_tble` as a tibble `labevents_tble`. 
 
     Hint: `labevents.csv.gz` is a data file too big to be read in by the `read_csv` function in its default setting. Utilize the `col_select` and `lazy` options in the `read_csv` function to reduce the memory burden.
 
+**Solution**
+
+Since the size of `labevents_tble` is too large to run in the cycle, so here I set the `eval = FALSE`.
+But for the Q5.3, we can see this cycle indeed works.
+
+```{r, eval=FALSE}
+labevents_tble = read_csv("/Users/a123456/biostat-203b-2022-winter/1.0/hosp/labevents_filtered_itemid.csv.gz")
+labevents_tble = arrange(labevents_tble, subject_id)
+icustays_tble = arrange(icustays_tble, subject_id)
+testtib = labevents_tble[0,]
+i = 1
+j = 1
+while (i <30198827) {
+  while (j < 53151) {
+    if(icustays_tble[j,1] == labevents_tble[i,1]){
+        testtib = add_row(testtib, labevents_tble[i,])
+        break
+    }else if(icustays_tble[j,1] < labevents_tble[i,1]){
+      j = j + 1
+    }else{
+      break
+    }
+  }
+  i = i + 1
+}
+labevents_tble = testtib
+
+```
+
 3. Further restrict `labevents_tble` to the first lab measurement during the ICU stay. 
+
+**Solution**
+
+```{r}
+labevents_tble = read_csv("/Users/a123456/biostat-203b-2022-winter/1.0/hosp/labevents_filtered_itemid.csv.gz")
+labevents_tble = arrange(labevents_tble, subject_id) %>%
+  distinct(subject_id, .keep_all = TRUE) 
+icustays_tble = arrange(icustays_tble, subject_id)
+testtib = labevents_tble[0,]
+i = 1
+j = 1
+while (i <273582) {
+  while (j < 53151) {
+    if(icustays_tble[j,1] == labevents_tble[i,1]){
+        testtib = add_row(testtib, labevents_tble[i,])
+        break
+    }else if(icustays_tble[j,1] < labevents_tble[i,1]){
+      j = j + 1
+    }else{
+      break
+    }
+  }
+  i = i + 1
+}
+labevents_tble = testtib
+```
+
 4. Summarize the lab measurements by appropriate numerics and graphics. 
+
+**Solution**
+
+```{r}
+summary(labevents_tble[[4]])
+labevents_tble %>%
+  group_by(itemid) %>%
+      summarise(mean(valuenum, na.rm = TRUE))
+labevents_tble %>%
+  ggplot() + 
+  geom_boxplot(mapping = aes(x = as.character(itemid), y = valuenum)) 
+```
 
 ## Q6. Vitals from charted events
 
