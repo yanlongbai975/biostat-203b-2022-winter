@@ -15,7 +15,6 @@ sessionInfo()
 
 
 ```{r setup, message=F}
-install.packages('R.utils')
 knitr::opts_chunk$set(echo = TRUE, cache = TRUE, cache.lazy = FALSE)
 library(R.utils)
 library(tidyverse)
