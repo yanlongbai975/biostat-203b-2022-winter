@@ -47,9 +47,9 @@ Which function is fastest? Is there difference in the (default) parsed data type
 **Solution**
 
 ```{r}
-system.time(read.csv("/core/admissions.csv.gz"))
-system.time(read_csv("/core/admissions.csv.gz"))
-system.time(fread("/core/admissions.csv.gz"))
+system.time(read.csv("/mnt/mimiciv/1.0/core/admissions.csv.gz"))
+system.time(read_csv("/mnt/mimiciv/1.0/core/admissions.csv.gz"))
+system.time(fread("/mnt/mimiciv/1.0/core/admissions.csv.gz"))
 ```
 
 We can see that the function `read_csv` costs the least time, so it is the fastest one.
@@ -76,7 +76,7 @@ system(
 **Solution**
 
 ```{r}
-icustays_tble = read_csv("/icu/icustays.csv.gz")
+icustays_tble = read_csv("/mnt/mimiciv/1.0/icu/icustays.csv.gz")
 icustays_tble
 ```
 
@@ -121,7 +121,7 @@ system(
 **Solution**
 
 ```{r}
-admissions_tble = read_csv("/core/admissions.csv.gz")
+admissions_tble = read_csv("/mnt/mimiciv/1.0/core/admissions.csv.gz")
 admissions_tble
 ```
 
@@ -132,7 +132,7 @@ admissions_tble
 RMK: since in Q2.3, we only kept the first ICU stay in the tibble `icustays_tble`, so for this question, I reload this tibble again in order to contain all cases.
 
 ```{r}
-icustays_tble = read_csv("/icu/icustays.csv.gz")
+icustays_tble = read_csv("/mnt/mimiciv/1.0/icu/icustays.csv.gz")
 #testtib = tibble(subject_id, hadm_id, admittime, dischtime, deathtime, admission_type, admission_location, discharge_location, insurance, language, marital_status, ethnicity, edregtime, edregtime, edouttime, hospital_expire_flag)
 testtib = admissions_tble[0,]
 i = 1
@@ -288,7 +288,7 @@ system(
 ```{r}
 icustays_tble = arrange(icustays_tble, subject_id, intime) %>%
   distinct(subject_id, .keep_all = TRUE)
-patients_tble = read_csv("/core/patients.csv.gz")
+patients_tble = read_csv("/mnt/mimiciv/1.0/core/patients.csv.gz")
 testtib = patients_tble[0,]
 i = 1
 j = 1
@@ -357,7 +357,7 @@ system(
 **Solution**
 
 ```{bash}
-gzip -cd "/hosp/labevents.csv.gz" | wc -l
+gzip -cd "/mnt/mimiciv/1.0/hosp/labevents.csv.gz" | wc -l
 ```
 
 2. We are interested in the lab measurements of creatinine (50912), potassium (50971), sodium (50983), chloride (50902), bicarbonate (50882), hematocrit (51221), white blood cell count (51301), glucose (50931), magnesium (50960), and calcium (50893). Retrieve a subset of `labevents.csv.gz` only containing these items for the patients in `icustays_tble` as a tibble `labevents_tble`. 
@@ -370,7 +370,7 @@ Since the size of `labevents_tble` is too large to run in the cycle, so here I s
 But for the Q5.3, we can see this cycle indeed works.
 
 ```{r, eval=FALSE}
-labevents_tble = read_csv("/hosp/labevents_filtered_itemid.csv.gz")
+labevents_tble = read_csv("/mnt/mimiciv/1.0/hosp/labevents_filtered_itemid.csv.gz")
 labevents_tble = arrange(labevents_tble, subject_id)
 icustays_tble = arrange(icustays_tble, subject_id) %>%
   distinct(subject_id, .keep_all = TRUE)
@@ -399,7 +399,7 @@ labevents_tble = testtib
 **Solution**
 
 ```{r}
-labevents_tble = read_csv("/hosp/labevents_filtered_itemid.csv.gz")
+labevents_tble = read_csv("/mnt/mimiciv/1.0/hosp/labevents_filtered_itemid.csv.gz")
 labevents_tble = arrange(labevents_tble, subject_id, charttime) %>%
   distinct(subject_id, .keep_all = TRUE) 
 icustays_tble = arrange(icustays_tble, subject_id) %>%
@@ -468,8 +468,8 @@ system(
 Same as Q5.2, here I set `eval = FALSE`.
 
 ```{r, eval=FALSE}
-icustays_tble = read_csv("/icu/icustays.csv.gz")
-chartevents_tble = read_csv("/icu/chartevents_filtered_itemid.csv.gz")
+icustays_tble = read_csv("/mnt/mimiciv/1.0/icu/icustays.csv.gz")
+chartevents_tble = read_csv("/mnt/mimiciv/1.0/icu/chartevents_filtered_itemid.csv.gz")
 chartevents_tble = arrange(chartevents_tble, subject_id, hadm_id)
 icustays_tble = arrange(icustays_tble, subject_id, hadm_id, intime)
 testtib = chartevents_tble[0,]
@@ -504,8 +504,8 @@ chartevents_tble = testtib
 **Solution**
 
 ```{r}
-icustays_tble = read_csv("/icu/icustays.csv.gz")
-chartevents_tble = read_csv("/icu/chartevents_filtered_itemid.csv.gz")
+icustays_tble = read_csv("/mnt/mimiciv/1.0/icu/icustays.csv.gz")
+chartevents_tble = read_csv("/mnt/mimiciv/1.0/icu/chartevents_filtered_itemid.csv.gz")
 chartevents_tble = arrange(chartevents_tble, subject_id, charttime) %>%
   distinct(subject_id, .keep_all = TRUE) #RMK, here I add "charttime" into the function "arrange()" in order to select the first vital measurement during the ICU stay for each patient
 
@@ -587,7 +587,7 @@ RMK: here I choose to use `full_join` instead of `left_join` since some observat
 If Dr. Zhou asked us to give all observations containing complete data, I will commit this is my mistake.
 
 ```{r}
-icustays_tble = read_csv("/icu/icustays.csv.gz")
+icustays_tble = read_csv("/mnt/mimiciv/1.0/icu/icustays.csv.gz")
 icustays_tble = arrange(icustays_tble, subject_id, intime) %>%
   distinct(subject_id, .keep_all = TRUE)
 mimic_icu_cohort = full_join(icustays_tble, admissions_tble_filtered, by = "subject_id") %>%
