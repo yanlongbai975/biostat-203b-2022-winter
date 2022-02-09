@@ -23,7 +23,7 @@ library(lubridate)
 library(dummies)
 ```
 
-```{r, eval =FALSE}
+```{r}
 os <- sessionInfo()$running
 if (str_detect(os, "Linux")) {
   mimic_path <- "/mnt/mimiciv/1.0"
@@ -34,7 +34,7 @@ if (str_detect(os, "Linux")) {
 
 In this exercise, we use tidyverse (ggpot2, dplyr, etc) to explore the [MIMIC-IV](https://mimic.mit.edu/docs/iv/) data introduced in [homework 1](https://ucla-biostat-203b.github.io/2022winter/hw/hw1/hw1.html) and to build a cohort of ICU stays.
 
-```{r, eval=FALSE}
+```{r}
 # tree -s -L 2 /Users/huazhou/Documents/Box\ Sync/MIMIC/mimic-iv-1.0
 system(str_c("tree -s -L 2 ", shQuote(mimic_path)), intern = TRUE)
 ```
@@ -67,7 +67,7 @@ For later questions, we stick to the tidyverse.
 ## Q2. ICU stays
 
 `icustays.csv.gz` (<https://mimic.mit.edu/docs/iv/modules/icu/icustays/>) contains data about Intensive Care Units (ICU) stays. The first 10 lines are
-```{r, eval=FALSE}
+```{r}
 system(
   str_c(
     "zcat < ", 
@@ -115,7 +115,7 @@ icustays_tble
 ## Q3. `admission` data
 
 Information of the patients admitted into hospital is available in `admissions.csv.gz`. See <https://mimic.mit.edu/docs/iv/modules/core/admissions/> for details of each field in this file. The first 10 lines are
-```{r, eval=FALSE}
+```{r}
 system(
   str_c(
     "zcat < ", 
@@ -275,7 +275,7 @@ remove(ad_hour, hr)
 ## Q4. `patients` data
 
 Patient information is available in `patients.csv.gz`. See <https://mimic.mit.edu/docs/iv/modules/core/patients/> for details of each field in this file. The first 10 lines are
-```{r, eval=FALSE}
+```{r}
 system(
   str_c(
     "zcat < ", 
@@ -346,7 +346,7 @@ the difference is not very large.
 ## Q5. Lab results
 
 `labevents.csv.gz` (<https://mimic.mit.edu/docs/iv/modules/hosp/labevents/>) contains all laboratory measurements for patients. The first 10 lines are
-```{r, eval=FALSE}
+```{r}
 system(
   str_c(
     "zcat < ", 
@@ -357,7 +357,7 @@ system(
 )
 ```
 `d_labitems.csv.gz` is the dictionary of lab measurements. 
-```{r, eval=FALSE}
+```{r}
 system(
   str_c(
     "zcat < ", 
@@ -484,7 +484,7 @@ From the boxplot we can see the variation of the item "50931" is significantly l
 ## Q6. Vitals from charted events
 
 `chartevents.csv.gz` (<https://mimic.mit.edu/docs/iv/modules/icu/chartevents/>) contains all the charted data available for a patient. During their ICU stay, the primary repository of a patient’s information is their electronic chart. The `itemid` variable indicates a single measurement type in the database. The `value` variable is the value measured for `itemid`. The first 10 lines of `chartevents.csv.gz` are
-```{r, eval=FALSE}
+```{r}
 system(
   str_c(
     "zcat < ", 
@@ -494,7 +494,7 @@ system(
 )
 ```
 `d_items.csv.gz` (<https://mimic.mit.edu/docs/iv/modules/icu/d_items/>) is the dictionary for the `itemid` in `chartevents.csv.gz`. 
-```{r, eval=FALSE}
+```{r}
 system(
   str_c(
     "zcat < ", 
