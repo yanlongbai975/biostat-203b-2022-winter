@@ -172,7 +172,7 @@ admissions_tble
 
 ```{r}
 admissions_tble = admissions_tble %>%
-  inner_join(select(icustays_tble, subject_id, hadm_id), by = c("subject_id", "hadm_id")) 
+  semi_join(select(icustays_tble, subject_id, hadm_id), by = c("subject_id", "hadm_id")) 
 admissions_tble
 ```
 
@@ -600,11 +600,12 @@ chartevents_tble = left_join(chartevents_tble, select(icustays_tble, subject_id,
   filter(charttime < outtime &
          charttime > intime
          ) %>%
-  group_by(subject_id) %>%
+  group_by(subject_id, itemid) %>%
   arrange(charttime, .by_group = TRUE) %>%
   slice_head(n = 1) %>%
   ungroup() %>%
-  select(-intime, -outtime)
+  select(-intime, -outtime, -hadm_id, -stay_id)
+chartevents_tble = pivot_wider(chartevents_tble, names_prefix = "", names_from = c("itemid"), values_from = c("charttime","valuenum"))
 chartevents_tble
 ```
 
@@ -643,11 +644,20 @@ and columns contain at least following variables
 
 
 ```{r}
-mimic_icu_cohort = left_join(icustays_tble, admissions_tble, by = "subject_id") %>%
+mimic_icu_cohort = left_join(icustays_tble, admissions_tble, by = c("subject_id", "hadm_id")) %>%
   left_join(patients_tble, by = "subject_id") %>%
   left_join(labevents_tble, by = "subject_id") %>%
-  left_join(chartevents_tble, by = "subject_id")
+  left_join(chartevents_tble, by = "subject_id") %>%
+  mutate(age_hadm = anchor_age + year(admittime) - anchor_year) %>%
+  filter(age_hadm > 18) %>%
+  mutate(hadm_to_death = ifelse(is.na(deathtime), Inf, deathtime - admittime)) %>%
+  mutate(thirty_day_mort = hadm_to_death <= 2592000) %>%
+  print(width = Inf) %>%
+  write_rds("mimic_icu_cohort.rds")
+```
 
+```{r, eval=FALSE}
+#my own codes for thirth_day-mort
 mimic_icu_cohort$thirty_day_mort_time = mimic_icu_cohort[, 12] - mimic_icu_cohort[, 10]
 i = 1
 while (i < 53151) {
