@@ -411,15 +411,12 @@ labevents_tble = testtib
 
 ```{r}
 interest_lab_mes = c(50912, 50971, 50983, 50902, 50882, 51221, 51301, 50931, 50960, 50893)
-lab_mes = read_csv("/Users/a123456/Desktop/203B/1.0/hosp/d_labitems.csv.gz", col_select = c(1), show_col_types = FALSE) %>%
+lab_mes = read_csv("/Users/a123456/Desktop/203B/1.0/hosp/d_labitems.csv.gz", col_select = c(1,2), show_col_types = FALSE) %>%
   filter(itemid %in% interest_lab_mes)
 labevents_tble = read_csv("/Users/a123456/Desktop/203B/1.0/hosp/labevents_filtered_itemid.csv.gz", show_col_types = FALSE) %>%
-  inner_join(select(lab_mes, itemid), by = "itemid") %>%
+  inner_join(lab_mes, by = "itemid") %>%
   inner_join(select(icustays_tble, subject_id), by = "subject_id")
 labevents_tble
-rm(lab_mes)
-rm(interest_lab_mes)
-gc()
 ```
 
 3. Further restrict `labevents_tble` to the first lab measurement during the ICU stay. 
@@ -458,12 +455,16 @@ labevents_tble = left_join(labevents_tble, select(icustays_tble, subject_id, int
   filter(charttime < outtime &
          charttime > intime
          ) %>%
-  group_by(subject_id) %>%
+  group_by(subject_id, itemid) %>%
   arrange(charttime, .by_group = TRUE) %>%
   slice_head(n = 1) %>%
   ungroup() %>%
   select(-intime, -outtime)
+labevents_tble = pivot_wider(labevents_tble, names_from = c("itemid", "label"), values_from = c("charttime","valuenum"))
 labevents_tble
+rm(lab_mes)
+rm(interest_lab_mes)
+gc()
 ```
 
 4. Summarize the lab measurements by appropriate numerics and graphics. 
