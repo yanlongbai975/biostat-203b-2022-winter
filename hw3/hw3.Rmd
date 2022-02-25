@@ -226,8 +226,10 @@ mimic_icu_cohort = left_join(icustays_tble, admissions_tble,
     if(as.numeric(substr(hadm_to_death, 5, 6)) <= 30) 1 else 0} else 0) %>%
   print(width = Inf)  %>%
   collect() %>%
+  #write_rds(
+  #  "/Users/a123456/biostat-203b-2022-winter/hw3/mimiciv_shiny/icu_cohort.rds")
   write_rds(
-    "/Users/a123456/biostat-203b-2022-winter/hw3/mimiciv_shiny/icu_cohort.rds")
+    "/home/yanlongbai975/biostat-203b-2022-winter/hw3/mimiciv_shiny/icu_cohort.rds")
 ```
 
 Close database connection and clear workspace.
