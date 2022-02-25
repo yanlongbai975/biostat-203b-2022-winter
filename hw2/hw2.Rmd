@@ -192,7 +192,7 @@ images have little difference with your answer, this is the reason!!!
 
 For "admission year":
 
-```{r}
+```{r, eval=FALSE}
 ad_year = as.character(admissions_tble[[3]]) %>%
   substring(1, 4) %>%
   as.numeric()
@@ -202,9 +202,16 @@ ggplot(data = y) +
 remove(y)
 ```
 
+```{r}
+admissions_tble %>%
+  ggplot() +
+  geom_bar(mapping = aes(x = year(admittime))) +
+  labs(x = "admission year")
+```
+
 For "admission month":
 
-```{r}
+```{r, eval=FALSE}
 ad_month = as.character(admissions_tble[[3]]) %>%
   substring(6, 7) %>%
   as.numeric()
@@ -214,9 +221,16 @@ ggplot(data = m) +
 remove(m)
 ```
 
+```{r}
+admissions_tble %>%
+  ggplot() +
+  geom_bar(mapping = aes(x = lubridate::month(admittime, label = TRUE))) +
+  labs(x = "admission month")
+```
+
 For "admission month day":
 
-```{r}
+```{r, eval=FALSE}
 ad_monthday = as.character(admissions_tble[[3]]) %>%
   substring(9, 10) %>%
   as.numeric()
@@ -226,9 +240,16 @@ ggplot(data = md) +
 remove(md)
 ```
 
-For "admission week day" (RMK: "0" represents Sunday):
-
 ```{r}
+admissions_tble %>%
+  ggplot() +
+  geom_bar(mapping = aes(x = mday(admittime))) +
+  labs(x = "admission month day")
+```
+
+For "admission week day":
+
+```{r, eval=FALSE}
 weekday = NULL
 c = 0
 y = 0
@@ -260,9 +281,16 @@ ggplot(data = ad_weekday) +
 remove(c, i, month, week, weekday, y, year, ad_weekday, ad_month, ad_monthday, ad_year)
 ```
 
+```{r}
+admissions_tble %>%
+  ggplot() +
+  geom_bar(mapping = aes(x = lubridate::wday(admittime, label = TRUE, abbr = TRUE))) +
+  labs(x = "admission week day")
+```
+
 For "admission hour":
 
-```{r}
+```{r, eval=FALSE}
 ad_hour = as.character(admissions_tble[[3]]) %>%
   substring(12, 13) %>%
   as.numeric()
@@ -270,6 +298,13 @@ hr = as.data.frame(ad_hour)
 ggplot(data = hr) + 
   geom_bar(mapping = aes(x = ad_hour))
 remove(ad_hour, hr)
+```
+
+```{r}
+admissions_tble %>%
+  ggplot() +
+  geom_bar(mapping = aes(x = hour(admittime))) +
+  labs(x = "admission hour")
 ```
 
 ## Q4. `patients` data
