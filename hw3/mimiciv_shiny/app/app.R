@@ -67,9 +67,11 @@ ui <- fluidPage(
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
+# icu = read_rds(
+#   "/Users/a123456/biostat-203b-2022-winter/hw3/mimiciv_shiny/icu_cohort.rds")
   icu = read_rds(
-    "/Users/a123456/biostat-203b-2022-winter/hw3/mimiciv_shiny/icu_cohort.rds")
-
+    "/home/yanlongbai975/biostat-203b-2022-winter/hw3/mimiciv_shiny/icu_cohort.rds")
+  
     output$distPlot <- renderPlot({
       if(input$var == "Admission year") {
         icu %>%
