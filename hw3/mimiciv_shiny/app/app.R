@@ -8,6 +8,11 @@
 #
 
 library(shiny)
+suppressPackageStartupMessages(library(dbplyr))
+suppressPackageStartupMessages(library(tidyverse))
+suppressPackageStartupMessages(library(lubridate))
+library(DBI)
+library(bigrquery)
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
@@ -70,7 +75,7 @@ server <- function(input, output) {
 # icu = read_rds(
 #   "/Users/a123456/biostat-203b-2022-winter/hw3/mimiciv_shiny/icu_cohort.rds")
   icu = read_rds(
-    "/home/yanlongbai975/biostat-203b-2022-winter/hw3/mimiciv_shiny/icu_cohort.rds")
+"/home/yanlongbai975/biostat-203b-2022-winter/hw3/mimiciv_shiny/icu_cohort.rds")
   
     output$distPlot <- renderPlot({
       if(input$var == "Admission year") {
