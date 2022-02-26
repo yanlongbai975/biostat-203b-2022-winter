@@ -32,7 +32,7 @@ ui <- fluidPage(
                                   ),
                       selected = "First admission year"),
           sliderInput("bins",
-                      "Number of bins (only for years):",
+                      "Number of bins (only for admission years):",
                       min = 20,
                       max = 102,
                       value = 102),
@@ -40,21 +40,22 @@ ui <- fluidPage(
                       label = "Which measurements do you want to 
                       check (only for Laboratory measurements and Vital 
                       measurements in charted data)?",
-                      choices = c("Creatinine (50912)", "Potassium (50971)",
-                                  "Sodium (50983)", "Chloride (50902)",
-                                  "Bicarbonate (50882)", "Hematocrit (51221)",
-                                  "White blood cell count (51301)", 
-                                  "Glucose (50931)","Magnesium (50960)",
-                                  "Calcium (50893)",
-                                  "Boxplot for all laboratory measurements",
-                                  "Heart rate (220045)", 
-                                  "Mean non-invasive blood pressure (220181)",
-                                  "Systolic non-invasive blood 
-                                  pressure (220179)", 
-                                  "Body temperature in Fahrenheit (223761)",
-                                  "Respiratory rate (220210)", 
-                                  "Boxplot for all vital measurements"),
-                      selected = "Boxplot for all laboratory measurements")
+                      choices = c(
+                        "Please select", 
+                        "Creatinine (50912)", "Potassium (50971)",
+                        "Sodium (50983)", "Chloride (50902)",
+                        "Bicarbonate (50882)", "Hematocrit (51221)",
+                        "White blood cell count (51301)", 
+                        "Glucose (50931)","Magnesium (50960)",
+                        "Calcium (50893)",
+                        "Boxplot for all laboratory measurements",
+                        "Heart rate (220045)", 
+                        "Mean non-invasive blood pressure (220181)",
+                        "Systolic non-invasive blood pressure (220179)", 
+                        "Body temperature in Fahrenheit (223761)",
+                        "Respiratory rate (220210)", 
+                        "Boxplot for all vital measurements"),
+                      selected = "Please select")
         ),
 
         # Show a plot of the generated distribution
@@ -241,7 +242,7 @@ server <- function(input, output) {
           ggplot() +
           geom_histogram(mapping = aes(x = dur_death)) +
           labs(x = "Days from being admitted to ICU to death",
-               title = "The number of patients died within 30 days is 6524,
+               title = "The number of patients died within 30 days is 5436,
                mean length of duration is 220.6446 days.") +
           theme(plot.title = element_text(hjust = 0.5))
       }

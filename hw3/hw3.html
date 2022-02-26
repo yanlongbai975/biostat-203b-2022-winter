@@ -209,26 +209,8 @@ library(bigrquery)</code></pre>
 <h2>Q1. Compile the ICU cohort in HW2 from the Google BigQuery database</h2>
 <p>Below is an outline of steps.</p>
 <ol style="list-style-type: decimal">
-<li>Load the service account token.</li>
-</ol>
-<pre class="r"><code># path to the service account token 
-if (Sys.info()[[&quot;nodename&quot;]] == &quot;biostat-203b-teaching-server&quot;) {
-  # on teaching server
-  satoken &lt;- &quot;/mnt/mimiciv/1.0/biostat-203b-2022winter-3fdc2392ac39.json&quot;
-} else {
-  # on my own Mac laptop
-  satoken &lt;- 
-    &quot;/Users/a123456/biostat-203b-2022-winter/biostat-203b-2022winter-3fdc2392ac39.json&quot;
-}
-# BigQuery authentication using service account
-bq_auth(
-  path = satoken,
-  # email = &quot;mimiciv-bigquery@biostat-203b-2022winter.iam.gserviceaccount.com&quot;,
-  # scopes = c(&quot;https://www.googleapis.com/auth/bigquery&quot;,
-  #   &quot;https://www.googleapis.com/auth/cloud-platform&quot;)
-)</code></pre>
-<ol style="list-style-type: decimal">
-<li>Connect to BigQuery database <code>mimic4_v1_0_203b</code> in GCP (Google Cloud Platform), using the billing account <code>biostat-203b-2022winter</code>.</li>
+<li><p>Load the service account token.</p></li>
+<li><p>Connect to BigQuery database <code>mimic4_v1_0_203b</code> in GCP (Google Cloud Platform), using the billing account <code>biostat-203b-2022winter</code>.</p></li>
 </ol>
 <pre class="r"><code># Connect to the BigQuery database `biostat-203b-2022winter.mimic4_v1_0_203b`
 con &lt;- dbConnect(
@@ -650,8 +632,8 @@ rm(interest_lab_mes)
 rm(labcharttm)
 gc()</code></pre>
 <pre><code>##           used (Mb) gc trigger  (Mb) limit (Mb) max used  (Mb)
-## Ncells 1306384 69.8    2055991 109.9         NA  2055991 109.9
-## Vcells 2333337 17.9    8388608  64.0      32768  4429606  33.8</code></pre>
+## Ncells 1314047 70.2    2055985 109.9         NA  2055985 109.9
+## Vcells 2349756 18.0    8388608  64.0      32768  4480646  34.2</code></pre>
 <ol start="7" style="list-style-type: decimal">
 <li>Connect to <code>chartevents</code> table and retrieve a subset that only contain subjects who appear in <code>icustays_tble</code> and the chart events listed in HW2.</li>
 </ol>
@@ -775,8 +757,8 @@ rm(vit)
 rm(interest_vit)
 gc()</code></pre>
 <pre><code>##           used (Mb) gc trigger  (Mb) limit (Mb) max used  (Mb)
-## Ncells 1307191 69.9    2055991 109.9         NA  2055991 109.9
-## Vcells 2335216 17.9    8388608  64.0      32768  4429606  33.8</code></pre>
+## Ncells 1314721 70.3    2055985 109.9         NA  2055985 109.9
+## Vcells 2351410 18.0    8388608  64.0      32768  4480646  34.2</code></pre>
 <ol start="8" style="list-style-type: decimal">
 <li>Put things together. This step is similar to Q7 of HW2. Using one chain of pipes <code>%&gt;%</code> to perform following data wrangling steps: (i) start with the <code>icustays_tble</code> for the first ICU stay of each unique patient, (ii) merge in admissions and patients tables, (iii) keep adults only (age at admission &gt;= 18), (iv) merge in the labevents and chartevents tables, (v) create an indicator for 30-day mortality, (vi) save the final tibble to an <code>icu_cohort.rds</code> R data file in the <code>mimiciv_shiny</code> folder.</li>
 </ol>
@@ -791,10 +773,10 @@ if (!dir.exists(&quot;mimiciv_shiny&quot;)) {
   filter(age_hadm &gt;= 18) %&gt;%
   left_join(labevents_tble, by = &quot;subject_id&quot;) %&gt;%
   left_join(chartevents_tble, by = &quot;subject_id&quot;) %&gt;%
-  mutate(hadm_to_death = if(is.na(dod)) Inf 
-         else as.character(dod-admittime)) %&gt;%
-  mutate(thirty_day_mort = if(str_length(hadm_to_death) != 8){
-    if(as.numeric(substr(hadm_to_death, 5, 6)) &lt;= 30) 1 else 0} else 0) %&gt;%
+  mutate(hadm_to_death = if(is.na(dod)) NA
+         else DATE_DIFF(date(dod), date(admittime), DAY)) %&gt;%
+  mutate(thirty_day_mort = ifelse(
+    is.na(dod), FALSE, DATE_DIFF(date(dod), date(admittime), DAY) &lt;= 30)) %&gt;%
   print(width = Inf)  %&gt;%
   collect() %&gt;%
   write_rds(
@@ -970,18 +952,20 @@ if (!dir.exists(&quot;mimiciv_shiny&quot;)) {
 ##  9 2175-11-20 01:12:00              85             120            98.6
 ## 10 2140-07-11 18:59:00             117             140            99.5
 ##    valuenum_220210 valuenum_220045 hadm_to_death thirty_day_mort
-##              &lt;dbl&gt;           &lt;dbl&gt; &lt;chr&gt;                   &lt;dbl&gt;
-##  1              16              78 Infinity                    0
-##  2               5              91 Infinity                    0
-##  3              16              67 Infinity                    0
-##  4              12              74 Infinity                    0
-##  5              26              95 Infinity                    0
-##  6              23              96 0-0 38 5:22:0               0
-##  7              18              89 Infinity                    0
-##  8              23              71 Infinity                    0
-##  9              17              67 Infinity                    0
-## 10              12              72 Infinity                    0
+##              &lt;dbl&gt;           &lt;dbl&gt;         &lt;int&gt; &lt;lgl&gt;          
+##  1              16              78            NA FALSE          
+##  2               5              91            NA FALSE          
+##  3              16              67            NA FALSE          
+##  4              12              74            NA FALSE          
+##  5              26              95            NA FALSE          
+##  6              23              96            39 FALSE          
+##  7              18              89            NA FALSE          
+##  8              23              71            NA FALSE          
+##  9              17              67            NA FALSE          
+## 10              12              72            NA FALSE          
 ## # … with more rows</code></pre>
+<pre class="r"><code>  #write_rds(
+#&quot;/home/yanlongbai975/biostat-203b-2022-winter/hw3/mimiciv_shiny/icu_cohort.rds&quot;)</code></pre>
 <p>Close database connection and clear workspace.</p>
 <pre class="r"><code>dbDisconnect(con)
 rm(list = ls())</code></pre>
