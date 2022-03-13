@@ -221,10 +221,12 @@ suppressPackageStartupMessages(library(miceRanger))</code></pre>
 <ol start="3" style="list-style-type: decimal">
 <li>Perform a data quality check of the ICU stays data. Discard variables with substantial missingness, say &gt;5000 <code>NA</code>s. Replace apparent data entry errors by <code>NA</code>s.</li>
 </ol>
+<p><strong>Solution</strong></p>
+<p>**Step 1: filter the substantial missingness.</p>
 <pre class="r"><code>icucohort_tble = read_rds(&quot;/Users/a123456/biostat-203b-2022-winter/hw3/mimiciv_shiny/icu_cohort.rds&quot;)
 Datacheck = c(1:59)
 for (i in 1:ncol(icucohort_tble)) {
-  Datacheck[i] = sum(is.na(icucohort_tble[ , i]))
+  Datacheck[i] = sum(is.na(icucohort_tble[[i]]))
 }
 Datacheck</code></pre>
 <pre><code>##  [1]     0     0     0     0     0     0     0     0     0     0 47642     0
@@ -243,6 +245,53 @@ Datacheck</code></pre>
 ## [1] &quot;dod&quot;
 ## [1] &quot;hadm_to_death&quot;</code></pre>
 <p><strong>From the result of data quality check, we will discard the variables</strong> <strong>“deathtime”, “edregtime”, “edouttime”, “dod”, “hadm_to_death”.</strong></p>
+<p>**Step 2: detect and replace apparent data entry errors.</p>
+<pre class="r"><code>icucohort_tble1 = icucohort_tble
+icucohort_tble = select(icucohort_tble, -c(&quot;deathtime&quot;, &quot;edregtime&quot;, 
+                                           &quot;edouttime&quot;, &quot;dod&quot;, &quot;hadm_to_death&quot;))
+Datacheck = Datacheck[Datacheck &lt;= 5000]
+#Also delete the values in Datacheck corresponding to these five discarded
+#variables.</code></pre>
+<pre class="r"><code>dataerror = list() #Create an empty list to save the data entry errors.
+error_ind = list()
+for (i in c(1:7)) {
+  dataerror[[i]] = NULL
+}
+for(i in c(8:53)) { 
+  #Column 1-7 are some patient&#39;s characteristics and the Column 54 is a logical 
+  #variable about &quot;thirty day mort&quot;
+  colpoint = icucohort_tble[, i] 
+  #Using colpoint to save the column information in current loop.
+  colname = colnames(colpoint)
+  #Using colname to save the column name in current loop.
+  if(!is.timepoint(colpoint[[1]])){
+    if(!is.character(colpoint[[1]])){
+      if(!is.integer(colpoint[[1]])){
+        #Notice that the 18th column using integer (0/1) to denote a logical 
+        #value, so here I decide to exclude this case.
+      dataerror[[i]] = boxplot.stats(colpoint[[1]])$out 
+      #Detect data entry errors using box plot (outliers)
+        if(length(boxplot.stats(colpoint[[1]])$out &gt; 2)){
+        error_ind[[i]] &lt;- which(
+          icucohort_tble[[i]] %in% c(boxplot.stats(colpoint[[1]])$out)
+          ) #Using error_ind to record the index of data entry errors.
+        }
+      }
+    }
+  }
+}</code></pre>
+<pre class="r"><code>#Setting the error data to be NA.
+icucohort_tble2 = icucohort_tble
+for (i in c(1:53)) {
+  if(length(error_ind[[i]]) != 0){
+    for (j in 1: length(error_ind[[i]])) {
+      ind = error_ind[[i]][j]
+      icucohort_tble[ind, i] = NA
+    }
+  }
+}
+#Also notice that the number of NA in each current variable is equal to the 
+#number of error data entries plus the number of NAs before replacing.</code></pre>
 <ol start="4" style="list-style-type: decimal">
 <li><p>Impute missing values by <code>miceRanger</code> (request <span class="math inline">\(m=3\)</span> data sets). This step is computational intensive. Make sure to save the imputation results as a file. Hint: Setting <code>max.depth=10</code> in the <code>miceRanger</code> function may cut some computing time.</p></li>
 <li><p>Make imputation diagnostic plots and explain what they mean.</p></li>

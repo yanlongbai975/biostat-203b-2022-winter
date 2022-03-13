@@ -21,6 +21,7 @@ Load database libraries and the tidyverse frontend:
 suppressPackageStartupMessages(library(tidyverse))
 suppressPackageStartupMessages(library(lubridate))
 suppressPackageStartupMessages(library(miceRanger))
+suppressPackageStartupMessages(library(doParallel))
 ```
 
 ## Q1. Missing data
@@ -68,13 +69,15 @@ Through the Shiny app developed in HW3, we observe abundant missing values in th
 **Step 1: filter the substantial missingness.
 
 ```{r}
-icucohort_tble = read_rds("/Users/a123456/biostat-203b-2022-winter/hw3/mimiciv_shiny/icu_cohort.rds")
-Datacheck = c(1 : 59)
-for (i in 1 : ncol(icucohort_tble)) {
-  Datacheck[i] = sum(is.na(icucohort_tble[ , i]))
+icucohort_tble = read_rds(
+  "/Users/a123456/biostat-203b-2022-winter/hw3/mimiciv_shiny/icu_cohort.rds"
+  )
+Datacheck = c(1:59)
+for (i in 1:ncol(icucohort_tble)) {
+  Datacheck[i] = sum(is.na(icucohort_tble[[i]]))
 }
 Datacheck
-for (i in c(1 : 59)) {
+for (i in c(1:59)) {
   if(Datacheck[i] > 5000){
     print(colnames(icucohort_tble[1, i]))
   }
@@ -91,35 +94,186 @@ icucohort_tble1 = icucohort_tble
 icucohort_tble = select(icucohort_tble, -c("deathtime", "edregtime", 
                                            "edouttime", "dod", "hadm_to_death"))
 Datacheck = Datacheck[Datacheck <= 5000]
+#Also delete the values in Datacheck corresponding to these five discarded
+#variables.
 ```
 
 ```{r}
-dataerror = list()
-for(i in c(8 : 53)) {
-  colpoint = icucohort_tble[ , i]
+dataerror = list() #Create an empty list to save the data entry errors.
+error_ind = list()
+for (i in c(1:7)) {
+  dataerror[[i]] = NULL
+}
+for(i in c(8:53)) { 
+  #Column 1-7 are some patient's characteristics and the Column 54 is a logical 
+  #variable about "thirty day mort"
+  colpoint = icucohort_tble[, i] 
+  #Using colpoint to save the column information in current loop.
   colname = colnames(colpoint)
+  #Using colname to save the column name in current loop.
   if(!is.timepoint(colpoint[[1]])){
     if(!is.character(colpoint[[1]])){
-      dataerror[[i-7]] = boxplot.stats(colpoint[[1]])$out
-#      ggplot() +
-#  geom_boxplot(mapping = aes(x = colname, y = colpoint[[1]]))
+      if(!is.integer(colpoint[[1]])){
+        #Notice that the 18th column using integer (0/1) to denote a logical 
+        #value, so here I decide to exclude this case.
+      dataerror[[i]] = boxplot.stats(colpoint[[1]])$out 
+      #Detect data entry errors using box plot (outliers)
+        if(length(boxplot.stats(colpoint[[1]])$out > 2)){
+        error_ind[[i]] <- which(
+          icucohort_tble[[i]] %in% c(boxplot.stats(colpoint[[1]])$out)
+          ) #Using error_ind to record the index of data entry errors.
+        }
+      }
     }
   }
 }
+```
 
+```{r}
+#Setting the error data to be NA.
+icucohort_tble2 = icucohort_tble
+for (i in c(1:53)) {
+  if(length(error_ind[[i]]) != 0){
+    for (j in 1: length(error_ind[[i]])) {
+      ind = error_ind[[i]][j]
+      icucohort_tble[ind, i] = NA
+    }
+  }
+}
+#Also notice that the number of NA in each current variable is equal to the 
+#number of error data entries plus the number of NAs before replacing.
 ```
 
 4. Impute missing values by `miceRanger` (request $m=3$ data sets). This step is computational intensive. Make sure to save the imputation results as a file. Hint: Setting `max.depth=10` in the `miceRanger` function may cut some computing time.
 
+**Solution**
+
+```{r}
+icucohort_tble_imp <- miceRanger(icucohort_tble,
+                                 m = 3,
+                                 max.depth = 10,
+                                 returnModels = FALSE,
+                                 verbose=FALSE,
+                                 valueSelector = "meanMatch")
+```
+
+```{r, eval = FALSE}
+cl = makeCluster(4)
+registerDoParallel(cl)
+icucohort_tble_imp = miceRanger(icucohort_tble,
+                                 m = 3,
+                                 vars = c(
+                                   "los", "valuenum_51301", "valuenum_50882", 
+                                   "valuenum_51221", "valuenum_50912", 
+                                   "valuenum_50893", "valuenum_50971", 
+                                   "valuenum_50983", "valuenum_50902", 
+                                   "valuenum_50960", "valuenum_50931", 
+                                   "valuenum_220181", "valuenum_220179", 
+                                   "valuenum_223761", "valuenum_220210", 
+                                   "valuenum_220045"),
+                                 max.depth = 10,
+                                 returnModels = FALSE,
+                                 parallel = TRUE,
+                                 verbose=TRUE,
+                                 )
+stopCluster(cl)
+registerDoSEQ()
+write_rds(
+  icucohort_tble_imp,
+  "/Users/a123456/Desktop/203B/hw4/drive-download-20220313T015600Z-001/icu_cohort_imp.rds"
+  )
+
+```
+```{r}
+icucohort_tble_imp = read_rds(
+  "/Users/a123456/Desktop/203B/hw4/drive-download-20220313T015600Z-001/icu_cohort_imp.rds"
+  )
+```
+
+**Since the running time of imputation is too long, I set `eval = FALSE` for**
+**the knitting and just directly read in the rds file containing this imputed**
+**data set.**
+
 5. Make imputation diagnostic plots and explain what they mean.
 
+**Solution**
+
+```{r}
+plotDistributions(icucohort_tble_imp, vars = 'allNumeric')
+```
+**The red line in these plots are the density of the original, non-missing data.**
+**The multiple black lines are the density of the imputed values in each of the**
+**data set at different iterations. We can see most of these imputed value**
+**distributions (black) are converging to the original distributions (red).**
+
+```{r}
+plotCorrelations(icucohort_tble_imp, vars = 'allNumeric')
+```
+**From those boxplots, we can obtain the correlations of imputed values**
+**between every combination of data sets at each iteration.**
+
+```{r}
+plotVarConvergence(icucohort_tble_imp, vars = 'allNumeric')
+```
+**These plots are used to check whether the missing data locations are**
+**correlated with higher or lower values, i.e. whether those missing data are**
+**MCAR or not. They plot the evolution of the dispersion and center of each**
+**variable. the center is the mean and the dispersion is the standard deviation.**
+
+```{r}
+plotModelError(icucohort_tble_imp, vars = 'allNumeric')
+```
+**These plots provide the OOB R-squared values of each iteration, and the higher**
+**this value is, the better this imputation is.**
+
+```{r}
+plotVarImportance(icucohort_tble_imp)
+```
+**This table indicates the importance of each column variable in the imputation**
+**of row variable. The higher the entry value is, the more important of this**
+**column variable is in row varaible's imputation.**
+
+```{r}
+plotImputationVariance(icucohort_tble_imp)
+```
+**These plots show the distribution of the difference between different data sets of the**
+**imputed values.For the numeric features, the vertical dashed line is the**
+**population SD, the area under the curve is the density of sample SD, where**
+**the shaded area is the sample SD below the population SD.**
+
+
 6. Choose one of the imputed data sets to be used in Q2. This is **not** a good idea to use just one imputed data set or to average multiple imputed data sets. Explain in a couple of sentences what the correct Multiple Imputation strategy is.
+
+**Solution**
+
+```{r}
+icucohort_tble = completeData(icucohort_tble_imp, datasets = 1)
+icucohort_tble = icucohort_tble$Dataset_1 %>%
+  as_tibble()
+```
+
+**When we use a single imputed data set to be our final data set, the possibility of errors will increase.**
+**For instance, when miceRanger imputes a categorical entry, since it employs random forest algorithm, different**
+**imputed data sets will use different samples from the original data set, and thus leading to different outputs**
+**of this missing categorical entry. Now suppose we set `m = 5`, i.e. asking miceRanger to return 5 imputed data**
+**sets, then 3 of them show this missing entry should be in first category, while the other two provide that it**
+**should be in second category. Then from the overall evaluation, we should determine to set this missing entry**
+**belonging to the first category. But now since we only use one of the imputed data sets, this decision may lead**
+**to a different result of this missing entry if we unfortunately choose one of those latter two sets. Thus, the**
+**correct Multiple Imputation strategy should be considering all possible cases comprehensively and then using**
+**the most possible results as our imputed data.**
 
 ## Q2. Predicting 30-day mortality
 
 Develop at least two analytic approaches for predicting the 30-day mortality of patients admitted to ICU using demographic information (gender, age, marital status, ethnicity), first lab measurements during ICU stay, and first vital measurements during ICU stay. For example, you can use (1) logistic regression (`glm()` function in base R or keras), (2) logistic regression with lasso penalty (glmnet or keras package), (3) random forest (randomForest package), or (4) neural network (keras package).
 
 1. Partition data into 80% training set and 20% test set. Stratify partitioning according the 30-day mortality status.
+
+**Solution**
+
+```{r}
+
+```
 
 2. Train the models using the training set.
 
