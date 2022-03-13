@@ -22,6 +22,7 @@ suppressPackageStartupMessages(library(tidyverse))
 suppressPackageStartupMessages(library(lubridate))
 suppressPackageStartupMessages(library(miceRanger))
 suppressPackageStartupMessages(library(doParallel))
+suppressPackageStartupMessages(library(glmnet))
 ```
 
 ## Q1. Missing data
@@ -90,7 +91,6 @@ for (i in c(1:59)) {
 **Step 2: detect and replace apparent data entry errors.
 
 ```{r}
-icucohort_tble1 = icucohort_tble
 icucohort_tble = select(icucohort_tble, -c("deathtime", "edregtime", 
                                            "edouttime", "dod", "hadm_to_death"))
 Datacheck = Datacheck[Datacheck <= 5000]
@@ -131,7 +131,6 @@ for(i in c(8:53)) {
 
 ```{r}
 #Setting the error data to be NA.
-icucohort_tble2 = icucohort_tble
 for (i in c(1:53)) {
   if(length(error_ind[[i]]) != 0){
     for (j in 1: length(error_ind[[i]])) {
@@ -163,7 +162,8 @@ registerDoParallel(cl)
 icucohort_tble_imp = miceRanger(icucohort_tble,
                                  m = 3,
                                  vars = c(
-                                   "los", "valuenum_51301", "valuenum_50882", 
+                                   "los", "marital_status",
+                                   "valuenum_51301", "valuenum_50882", 
                                    "valuenum_51221", "valuenum_50912", 
                                    "valuenum_50893", "valuenum_50971", 
                                    "valuenum_50983", "valuenum_50902", 
@@ -272,10 +272,42 @@ Develop at least two analytic approaches for predicting the 30-day mortality of 
 **Solution**
 
 ```{r}
-
+#Training set
+icu_training = slice_sample(icucohort_tble, prop = 0.8)
+#Test set
+icu_test = anti_join(icucohort_tble, icu_training, by = 'subject_id')
 ```
 
 2. Train the models using the training set.
+
+**Solution**
+
+```{r}
+#(1) logistic regression "glm"
+model_glm =
+  glm(thirty_day_mort ~ gender + anchor_age + marital_status + ethnicity +
+        valuenum_51301 + valuenum_50882 + valuenum_51221 + valuenum_50912 +
+        valuenum_50893 + valuenum_50971 + valuenum_50983 + valuenum_50902 +
+        valuenum_50960 + valuenum_50931 + valuenum_220181 + valuenum_220179 +
+        valuenum_223761 + valuenum_220210 + valuenum_220045,
+      data = icu_training)
+summary(model_glm)
+```
+
+
+```{r}
+#(2) logistic regression with lasso penalty
+x <- model.matrix( ~-1 + gender + anchor_age + marital_status + ethnicity +
+        valuenum_51301 + valuenum_50882 + valuenum_51221 + valuenum_50912 +
+        valuenum_50893 + valuenum_50971 + valuenum_50983 + valuenum_50902 +
+        valuenum_50960 + valuenum_50931 + valuenum_220181 + valuenum_220179 +
+        valuenum_223761 + valuenum_220210 + valuenum_220045, 
+        data = icu_training)
+model_glmnet =
+  glmnet(x, as.factor(icu_training$thirty_day_mort), family = "binomial")
+plot(model_glmnet)
+min(model_glmnet$lambda)
+```
 
 3. Compare model prediction performance on the test set.
 
