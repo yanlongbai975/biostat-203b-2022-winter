@@ -23,6 +23,7 @@ suppressPackageStartupMessages(library(lubridate))
 suppressPackageStartupMessages(library(miceRanger))
 suppressPackageStartupMessages(library(doParallel))
 suppressPackageStartupMessages(library(glmnet))
+suppressPackageStartupMessages(library(ROCR))
 ```
 
 ## Q1. Missing data
@@ -311,3 +312,32 @@ min(model_glmnet$lambda)
 
 3. Compare model prediction performance on the test set.
 
+**Solution**
+
+```{r}
+x_test <- model.matrix( ~-1 + gender + anchor_age + marital_status + ethnicity +
+        valuenum_51301 + valuenum_50882 + valuenum_51221 + valuenum_50912 +
+        valuenum_50893 + valuenum_50971 + valuenum_50983 + valuenum_50902 +
+        valuenum_50960 + valuenum_50931 + valuenum_220181 + valuenum_220179 +
+        valuenum_223761 + valuenum_220210 + valuenum_220045, 
+        data = icu_test)
+
+glm_pred = predict(model_glm, icu_test) %>%
+  prediction(icu_test$thirty_day_mort)
+glm_perf = performance(glm_pred, 'tpr', 'fpr')
+plot(glm_perf, colorize = TRUE, text.adj = c(-0.2, 1.7))
+
+```
+
+```{r}
+#(2) logistic regression with lasso penalty
+assess.glmnet(model_glmnet, newx = x_test, 
+              newy = as.factor(icu_test$thirty_day_mort),
+              family = 'binomial',
+              )
+```
+
+```{r}
+rm(list = ls())
+gc()
+```
