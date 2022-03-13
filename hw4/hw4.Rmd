@@ -68,12 +68,20 @@ Through the Shiny app developed in HW3, we observe abundant missing values in th
 
 **Solution**
 
-**Step 1: filter the substantial missingness.
+**Step 1: filter the substantial missingness.**
 
 ```{r}
-icucohort_tble = read_rds(
+if (Sys.info()[["nodename"]] == "biostat-203b-teaching-server") {
+  # on teaching server
+  icucohort_tble = read_rds(
+  "/home/yanlongbai975/biostat-203b-2022-winter/hw3/mimiciv_shiny/icu_cohort.rds"
+  )
+} else {
+  # on my own Mac laptop
+  icucohort_tble = read_rds(
   "/Users/a123456/biostat-203b-2022-winter/hw3/mimiciv_shiny/icu_cohort.rds"
   )
+}
 Datacheck = c(1:59)
 for (i in 1:ncol(icucohort_tble)) {
   Datacheck[i] = sum(is.na(icucohort_tble[[i]]))
@@ -89,7 +97,7 @@ for (i in c(1:59)) {
 **From the result of data quality check, we will discard the variables**
 **"deathtime", "edregtime", "edouttime", "dod", "hadm_to_death".**
 
-**Step 2: detect and replace apparent data entry errors.
+**Step 2: detect and replace apparent data entry errors.**
 
 ```{r}
 icucohort_tble = select(icucohort_tble, -c("deathtime", "edregtime", 
@@ -117,6 +125,7 @@ for(i in c(8:53)) {
       if(!is.integer(colpoint[[1]])){
         #Notice that the 18th column using integer (0/1) to denote a logical 
         #value, so here I decide to exclude this case.
+        #18th column: hospital_expire_flag.
       dataerror[[i]] = boxplot.stats(colpoint[[1]])$out 
       #Detect data entry errors using box plot (outliers)
         if(length(boxplot.stats(colpoint[[1]])$out > 2)){
@@ -148,16 +157,13 @@ for (i in c(1:53)) {
 
 **Solution**
 
-```{r}
-icucohort_tble_imp <- miceRanger(icucohort_tble,
-                                 m = 3,
-                                 max.depth = 10,
-                                 returnModels = FALSE,
-                                 verbose=FALSE,
-                                 valueSelector = "meanMatch")
-```
+**Since the running time of imputation is too long, I set `eval = FALSE` for**
+**this imputation during**
+**knitting and just directly read in the rds file containing this imputed**
+**data set.**
 
 ```{r, eval = FALSE}
+#Runing imputation in parallel.
 cl = makeCluster(4)
 registerDoParallel(cl)
 icucohort_tble_imp = miceRanger(icucohort_tble,
@@ -186,14 +192,22 @@ write_rds(
 
 ```
 ```{r}
-icucohort_tble_imp = read_rds(
+if (Sys.info()[["nodename"]] == "biostat-203b-teaching-server") {
+  # on teaching server
+  icucohort_tble_imp = read_rds(
+  "/home/yanlongbai975/biostat-203b-2022-winter/hw4/icu_cohort_imp.rds"
+  )
+} else {
+  # on my own Mac laptop
+  icucohort_tble_imp = read_rds(
   "/Users/a123456/Desktop/203B/hw4/drive-download-20220313T015600Z-001/icu_cohort_imp.rds"
   )
+}
+
+
 ```
 
-**Since the running time of imputation is too long, I set `eval = FALSE` for**
-**the knitting and just directly read in the rds file containing this imputed**
-**data set.**
+
 
 5. Make imputation diagnostic plots and explain what they mean.
 
@@ -202,7 +216,8 @@ icucohort_tble_imp = read_rds(
 ```{r}
 plotDistributions(icucohort_tble_imp, vars = 'allNumeric')
 ```
-**The red line in these plots are the density of the original, non-missing data.**
+
+**The red lines in these plots are the density of the original, non-missing data.**
 **The multiple black lines are the density of the imputed values in each of the**
 **data set at different iterations. We can see most of these imputed value**
 **distributions (black) are converging to the original distributions (red).**
@@ -210,12 +225,14 @@ plotDistributions(icucohort_tble_imp, vars = 'allNumeric')
 ```{r}
 plotCorrelations(icucohort_tble_imp, vars = 'allNumeric')
 ```
+
 **From those boxplots, we can obtain the correlations of imputed values**
 **between every combination of data sets at each iteration.**
 
 ```{r}
 plotVarConvergence(icucohort_tble_imp, vars = 'allNumeric')
 ```
+
 **These plots are used to check whether the missing data locations are**
 **correlated with higher or lower values, i.e. whether those missing data are**
 **MCAR or not. They plot the evolution of the dispersion and center of each**
@@ -224,12 +241,14 @@ plotVarConvergence(icucohort_tble_imp, vars = 'allNumeric')
 ```{r}
 plotModelError(icucohort_tble_imp, vars = 'allNumeric')
 ```
+
 **These plots provide the OOB R-squared values of each iteration, and the higher**
 **this value is, the better this imputation is.**
 
 ```{r}
 plotVarImportance(icucohort_tble_imp)
 ```
+
 **This table indicates the importance of each column variable in the imputation**
 **of row variable. The higher the entry value is, the more important of this**
 **column variable is in row varaible's imputation.**
@@ -237,10 +256,14 @@ plotVarImportance(icucohort_tble_imp)
 ```{r}
 plotImputationVariance(icucohort_tble_imp)
 ```
+
 **These plots show the distribution of the difference between different data sets of the**
 **imputed values.For the numeric features, the vertical dashed line is the**
 **population SD, the area under the curve is the density of sample SD, where**
 **the shaded area is the sample SD below the population SD.**
+**For categorical variables, the distribution of the number of distinct levels**
+**imputed for each sample is shown next to the distribution of unique draws from**
+**that variable in the nonmissing data, given that the draws were completely random.**
 
 
 6. Choose one of the imputed data sets to be used in Q2. This is **not** a good idea to use just one imputed data set or to average multiple imputed data sets. Explain in a couple of sentences what the correct Multiple Imputation strategy is.
@@ -315,6 +338,7 @@ min(model_glmnet$lambda)
 **Solution**
 
 ```{r}
+#(1) logistic regression "glm"
 x_test <- model.matrix( ~-1 + gender + anchor_age + marital_status + ethnicity +
         valuenum_51301 + valuenum_50882 + valuenum_51221 + valuenum_50912 +
         valuenum_50893 + valuenum_50971 + valuenum_50983 + valuenum_50902 +
