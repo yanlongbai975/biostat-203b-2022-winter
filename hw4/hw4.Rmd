@@ -330,6 +330,7 @@ x <- model.matrix( ~-1 + gender + anchor_age + marital_status + ethnicity +
 model_glmnet =
   glmnet(x, as.factor(icu_training$thirty_day_mort), family = "binomial")
 plot(model_glmnet)
+coef(model_glmnet, s = model_glmnet$lambda)
 min(model_glmnet$lambda)
 ```
 
@@ -350,7 +351,12 @@ glm_pred = predict(model_glm, icu_test) %>%
   prediction(icu_test$thirty_day_mort)
 glm_perf = performance(glm_pred, 'tpr', 'fpr')
 plot(glm_perf, colorize = TRUE, text.adj = c(-0.2, 1.7))
-
+```
+```{r}
+problogi = predict(model_glm, icu_test, type = "response")
+predlogi = ifelse(problogi > 0.5, TRUE, FALSE)
+table(observed = icu_test$thirty_day_mort, predicted = predlogi)
+cat('Accuracy', mean(predlogi == icu_test$thirty_day_mort))
 ```
 
 ```{r}
@@ -359,6 +365,14 @@ assess.glmnet(model_glmnet, newx = x_test,
               newy = as.factor(icu_test$thirty_day_mort),
               family = 'binomial',
               )
+```
+```{r}
+problogi = predict.glmnet(model_glmnet, x_test, type = "response")
+predlogi = ifelse(problogi > 0.5, TRUE, FALSE)
+predlogi_final = ifelse(rowSums(predlogi) > 30, TRUE, FALSE)
+
+table(observed = icu_test$thirty_day_mort, predicted = predlogi_final)
+cat('Accuracy', mean(predlogi == icu_test$thirty_day_mort))
 ```
 
 ```{r}
