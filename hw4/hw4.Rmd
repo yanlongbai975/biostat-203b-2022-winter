@@ -1,0 +1,381 @@
+---
+title: "Biostat 203B Homework 4"
+subtitle: Due Mar 18 @ 11:59PM
+output:
+  # ioslides_presentation: default
+  html_document:
+    toc: true
+    toc_depth: 4
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
+```
+
+Display machine information:
+```{r}
+sessionInfo()
+```
+Load database libraries and the tidyverse frontend:
+```{r}
+suppressPackageStartupMessages(library(tidyverse))
+suppressPackageStartupMessages(library(lubridate))
+suppressPackageStartupMessages(library(miceRanger))
+suppressPackageStartupMessages(library(doParallel))
+suppressPackageStartupMessages(library(glmnet))
+suppressPackageStartupMessages(library(ROCR))
+```
+
+## Q1. Missing data
+
+Through the Shiny app developed in HW3, we observe abundant missing values in the MIMIC-IV ICU cohort we created. In this question, we use multiple imputation to obtain a data set without missing values.
+
+0. Read following tutorials on the R package miceRanger for imputation: <https://github.com/farrellday/miceRanger>, <https://cran.r-project.org/web/packages/miceRanger/vignettes/miceAlgorithm.html>.
+
+    A more thorough book treatment of the practical imputation strategies is the book [*_Flexible Imputation of Missing Data_*](https://stefvanbuuren.name/fimd/) by Stef van Buuren. 
+
+1. Explain the jargon MCAR, MAR, and MNAR.
+
+**Solution**
+
+**MCAR**
+**If the probability of being missing is the same for all cases, then the data** 
+**are said to be missing completely at random (MCAR), which implies that causes** 
+**of the missing data are unrelated to the data.**
+
+**MAR**
+**If the probability of being missing is the same only within groups defined** 
+**by the observed data, then the data are missing at random (MAR).** 
+
+**MNAR**
+**If neither MCAR nor MAR holds, then we speak of missing not at random (MNAR).**
+**MNAR means that the probability of being missing varies for reasons that are** 
+**unknown to us.**
+
+2. Explain in a couple of sentences how the Multiple Imputation by Chained Equations (MICE) work.
+
+**Solution**
+
+**Firstly MICE checks the raw data sets, and finds and replaces those missing**
+**data with some random values, where those random values are from other**
+**observations of this variable. Then using the specified method of prediction,**
+**MICE will find the closest values for all missing values and fill them up**
+**variable by variable (column by column). According to the number of**
+**iterations we specify, MICE will repeat above steps and return a final**
+**imputation.**
+
+3. Perform a data quality check of the ICU stays data. Discard variables with substantial missingness, say >5000 `NA`s. Replace apparent data entry errors by `NA`s.
+
+**Solution**
+
+**Step 1: filter the substantial missingness.**
+
+```{r}
+if (Sys.info()[["nodename"]] == "biostat-203b-teaching-server") {
+  # on teaching server
+  icucohort_tble = read_rds(
+  "/home/yanlongbai975/biostat-203b-2022-winter/hw3/mimiciv_shiny/icu_cohort.rds"
+  )
+} else {
+  # on my own Mac laptop
+  icucohort_tble = read_rds(
+  "/Users/a123456/biostat-203b-2022-winter/hw3/mimiciv_shiny/icu_cohort.rds"
+  )
+}
+Datacheck = c(1:59)
+for (i in 1:ncol(icucohort_tble)) {
+  Datacheck[i] = sum(is.na(icucohort_tble[[i]]))
+}
+Datacheck
+for (i in c(1:59)) {
+  if(Datacheck[i] > 5000){
+    print(colnames(icucohort_tble[1, i]))
+  }
+}
+```
+
+**From the result of data quality check, we will discard the variables**
+**"deathtime", "edregtime", "edouttime", "dod", "hadm_to_death".**
+
+**Step 2: detect and replace apparent data entry errors.**
+
+```{r}
+icucohort_tble = select(icucohort_tble, -c("deathtime", "edregtime", 
+                                           "edouttime", "dod", "hadm_to_death"))
+Datacheck = Datacheck[Datacheck <= 5000]
+#Also delete the values in Datacheck corresponding to these five discarded
+#variables.
+```
+
+```{r}
+dataerror = list() #Create an empty list to save the data entry errors.
+error_ind = list()
+for (i in c(1:7)) {
+  dataerror[[i]] = NULL
+}
+for(i in c(8:53)) { 
+  #Column 1-7 are some patient's characteristics and the Column 54 is a logical 
+  #variable about "thirty day mort"
+  colpoint = icucohort_tble[, i] 
+  #Using colpoint to save the column information in current loop.
+  colname = colnames(colpoint)
+  #Using colname to save the column name in current loop.
+  if(!is.timepoint(colpoint[[1]])){
+    if(!is.character(colpoint[[1]])){
+      if(!is.integer(colpoint[[1]])){
+        #Notice that the 18th column using integer (0/1) to denote a logical 
+        #value, so here I decide to exclude this case.
+        #18th column: hospital_expire_flag.
+      dataerror[[i]] = boxplot.stats(colpoint[[1]])$out 
+      #Detect data entry errors using box plot (outliers)
+        if(length(boxplot.stats(colpoint[[1]])$out > 2)){
+        error_ind[[i]] <- which(
+          icucohort_tble[[i]] %in% c(boxplot.stats(colpoint[[1]])$out)
+          ) #Using error_ind to record the index of data entry errors.
+        }
+      }
+    }
+  }
+}
+```
+
+```{r}
+#Setting the error data to be NA.
+for (i in c(1:53)) {
+  if(length(error_ind[[i]]) != 0){
+    for (j in 1: length(error_ind[[i]])) {
+      ind = error_ind[[i]][j]
+      icucohort_tble[ind, i] = NA
+    }
+  }
+}
+#Also notice that the number of NA in each current variable is equal to the 
+#number of error data entries plus the number of NAs before replacing.
+```
+
+4. Impute missing values by `miceRanger` (request $m=3$ data sets). This step is computational intensive. Make sure to save the imputation results as a file. Hint: Setting `max.depth=10` in the `miceRanger` function may cut some computing time.
+
+**Solution**
+
+**Since the running time of imputation is too long, I set `eval = FALSE` for**
+**this imputation during**
+**knitting and just directly read in the rds file containing this imputed**
+**data set.**
+
+```{r, eval = FALSE}
+#Runing imputation in parallel.
+cl = makeCluster(4)
+registerDoParallel(cl)
+icucohort_tble_imp = miceRanger(icucohort_tble,
+                                 m = 3,
+                                 vars = c(
+                                   "los", "marital_status",
+                                   "valuenum_51301", "valuenum_50882", 
+                                   "valuenum_51221", "valuenum_50912", 
+                                   "valuenum_50893", "valuenum_50971", 
+                                   "valuenum_50983", "valuenum_50902", 
+                                   "valuenum_50960", "valuenum_50931", 
+                                   "valuenum_220181", "valuenum_220179", 
+                                   "valuenum_223761", "valuenum_220210", 
+                                   "valuenum_220045"),
+                                 max.depth = 10,
+                                 returnModels = FALSE,
+                                 parallel = TRUE,
+                                 verbose=TRUE,
+                                 )
+stopCluster(cl)
+registerDoSEQ()
+write_rds(
+  icucohort_tble_imp,
+  "/Users/a123456/Desktop/203B/hw4/drive-download-20220313T015600Z-001/icu_cohort_imp.rds"
+  )
+
+```
+```{r}
+if (Sys.info()[["nodename"]] == "biostat-203b-teaching-server") {
+  # on teaching server
+  icucohort_tble_imp = read_rds(
+  "/home/yanlongbai975/biostat-203b-2022-winter/hw4/icu_cohort_imp.rds"
+  )
+} else {
+  # on my own Mac laptop
+  icucohort_tble_imp = read_rds(
+  "/Users/a123456/Desktop/203B/hw4/drive-download-20220313T015600Z-001/icu_cohort_imp.rds"
+  )
+}
+
+
+```
+
+
+
+5. Make imputation diagnostic plots and explain what they mean.
+
+**Solution**
+
+```{r}
+plotDistributions(icucohort_tble_imp, vars = 'allNumeric')
+```
+
+**The red lines in these plots are the density of the original, non-missing data.**
+**The multiple black lines are the density of the imputed values in each of the**
+**data set at different iterations. We can see most of these imputed value**
+**distributions (black) are converging to the original distributions (red).**
+
+```{r}
+plotCorrelations(icucohort_tble_imp, vars = 'allNumeric')
+```
+
+**From those boxplots, we can obtain the correlations of imputed values**
+**between every combination of data sets at each iteration.**
+
+```{r}
+plotVarConvergence(icucohort_tble_imp, vars = 'allNumeric')
+```
+
+**These plots are used to check whether the missing data locations are**
+**correlated with higher or lower values, i.e. whether those missing data are**
+**MCAR or not. They plot the evolution of the dispersion and center of each**
+**variable. the center is the mean and the dispersion is the standard deviation.**
+
+```{r}
+plotModelError(icucohort_tble_imp, vars = 'allNumeric')
+```
+
+**These plots provide the OOB R-squared values of each iteration, and the higher**
+**this value is, the better this imputation is.**
+
+```{r}
+plotVarImportance(icucohort_tble_imp)
+```
+
+**This table indicates the importance of each column variable in the imputation**
+**of row variable. The higher the entry value is, the more important of this**
+**column variable is in row varaible's imputation.**
+
+```{r}
+plotImputationVariance(icucohort_tble_imp)
+```
+
+**These plots show the distribution of the difference between different data sets of the**
+**imputed values.For the numeric features, the vertical dashed line is the**
+**population SD, the area under the curve is the density of sample SD, where**
+**the shaded area is the sample SD below the population SD.**
+**For categorical variables, the distribution of the number of distinct levels**
+**imputed for each sample is shown next to the distribution of unique draws from**
+**that variable in the nonmissing data, given that the draws were completely random.**
+
+
+6. Choose one of the imputed data sets to be used in Q2. This is **not** a good idea to use just one imputed data set or to average multiple imputed data sets. Explain in a couple of sentences what the correct Multiple Imputation strategy is.
+
+**Solution**
+
+```{r}
+icucohort_tble = completeData(icucohort_tble_imp, datasets = 1)
+icucohort_tble = icucohort_tble$Dataset_1 %>%
+  as_tibble()
+```
+
+**When we use a single imputed data set to be our final data set, the possibility of errors will increase.**
+**For instance, when miceRanger imputes a categorical entry, since it employs random forest algorithm, different**
+**imputed data sets will use different samples from the original data set, and thus leading to different outputs**
+**of this missing categorical entry. Now suppose we set `m = 5`, i.e. asking miceRanger to return 5 imputed data**
+**sets, then 3 of them show this missing entry should be in first category, while the other two provide that it**
+**should be in second category. Then from the overall evaluation, we should determine to set this missing entry**
+**belonging to the first category. But now since we only use one of the imputed data sets, this decision may lead**
+**to a different result of this missing entry if we unfortunately choose one of those latter two sets. Thus, the**
+**correct Multiple Imputation strategy should be considering all possible cases comprehensively and then using**
+**the most possible results as our imputed data.**
+
+## Q2. Predicting 30-day mortality
+
+Develop at least two analytic approaches for predicting the 30-day mortality of patients admitted to ICU using demographic information (gender, age, marital status, ethnicity), first lab measurements during ICU stay, and first vital measurements during ICU stay. For example, you can use (1) logistic regression (`glm()` function in base R or keras), (2) logistic regression with lasso penalty (glmnet or keras package), (3) random forest (randomForest package), or (4) neural network (keras package).
+
+1. Partition data into 80% training set and 20% test set. Stratify partitioning according the 30-day mortality status.
+
+**Solution**
+
+```{r}
+#Training set
+icu_training = slice_sample(icucohort_tble, prop = 0.8)
+#Test set
+icu_test = anti_join(icucohort_tble, icu_training, by = 'subject_id')
+```
+
+2. Train the models using the training set.
+
+**Solution**
+
+```{r}
+#(1) logistic regression "glm"
+model_glm =
+  glm(thirty_day_mort ~ gender + anchor_age + marital_status + ethnicity +
+        valuenum_51301 + valuenum_50882 + valuenum_51221 + valuenum_50912 +
+        valuenum_50893 + valuenum_50971 + valuenum_50983 + valuenum_50902 +
+        valuenum_50960 + valuenum_50931 + valuenum_220181 + valuenum_220179 +
+        valuenum_223761 + valuenum_220210 + valuenum_220045,
+      data = icu_training)
+summary(model_glm)
+```
+
+
+```{r}
+#(2) logistic regression with lasso penalty
+x <- model.matrix( ~-1 + gender + anchor_age + marital_status + ethnicity +
+        valuenum_51301 + valuenum_50882 + valuenum_51221 + valuenum_50912 +
+        valuenum_50893 + valuenum_50971 + valuenum_50983 + valuenum_50902 +
+        valuenum_50960 + valuenum_50931 + valuenum_220181 + valuenum_220179 +
+        valuenum_223761 + valuenum_220210 + valuenum_220045, 
+        data = icu_training)
+model_glmnet =
+  glmnet(x, as.factor(icu_training$thirty_day_mort), family = "binomial")
+plot(model_glmnet)
+coef(model_glmnet, s = model_glmnet$lambda)
+min(model_glmnet$lambda)
+```
+
+3. Compare model prediction performance on the test set.
+
+**Solution**
+
+```{r}
+#(1) logistic regression "glm"
+x_test <- model.matrix( ~-1 + gender + anchor_age + marital_status + ethnicity +
+        valuenum_51301 + valuenum_50882 + valuenum_51221 + valuenum_50912 +
+        valuenum_50893 + valuenum_50971 + valuenum_50983 + valuenum_50902 +
+        valuenum_50960 + valuenum_50931 + valuenum_220181 + valuenum_220179 +
+        valuenum_223761 + valuenum_220210 + valuenum_220045, 
+        data = icu_test)
+
+glm_pred = predict(model_glm, icu_test) %>%
+  prediction(icu_test$thirty_day_mort)
+glm_perf = performance(glm_pred, 'tpr', 'fpr')
+plot(glm_perf, colorize = TRUE, text.adj = c(-0.2, 1.7))
+```
+```{r}
+problogi = predict(model_glm, icu_test, type = "response")
+predlogi = ifelse(problogi > 0.5, TRUE, FALSE)
+table(observed = icu_test$thirty_day_mort, predicted = predlogi)
+cat('Accuracy', mean(predlogi == icu_test$thirty_day_mort))
+```
+
+```{r}
+#(2) logistic regression with lasso penalty
+assess.glmnet(model_glmnet, newx = x_test, 
+              newy = as.factor(icu_test$thirty_day_mort),
+              family = 'binomial',
+              )
+```
+```{r}
+problogi = predict.glmnet(model_glmnet, x_test, type = "response")
+predlogi = ifelse(problogi > 0.5, TRUE, FALSE)
+predlogi_final = ifelse(rowSums(predlogi) > 30, TRUE, FALSE)
+
+table(observed = icu_test$thirty_day_mort, predicted = predlogi_final)
+cat('Accuracy', mean(predlogi == icu_test$thirty_day_mort))
+```
+
+```{r}
+rm(list = ls())
+gc()
+```
